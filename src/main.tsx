@@ -5,7 +5,7 @@ import App from './App.tsx';
 import '@fontsource/spectral/400.css';
 import '@fontsource/spectral/500.css';
 import '@fontsource/spectral/600.css';
-import '@fontsource/alex-brush';
+import '@fontsource/alex-brush/400.css';
 
 import './index.css';
 
