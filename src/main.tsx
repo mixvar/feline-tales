@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+
+import App from './core/App.tsx';
 
 import '@fontsource/spectral/400.css';
 import '@fontsource/spectral/500.css';
