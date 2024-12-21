@@ -14,9 +14,8 @@
   "dependencies": {
     "@fontsource/alex-brush": "^5.1.0",
     "@fontsource/spectral": "^5.1.0",
-    "@supabase/auth-ui-react": "^0.4.7",
-    "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.47.10",
+    "clsx": "^2.1.1",
     "md5": "^2.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
