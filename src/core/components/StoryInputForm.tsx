@@ -21,13 +21,13 @@ export const StoryInputForm = ({ onSubmit, isLoading, error }: StoryInputFormPro
         value={userInput}
         onChange={(e) => setUserInput(e.target.value)}
         placeholder="Opowiedz mi historię o..."
-        className="w-full p-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none"
+        className="w-full p-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none bg-white bg-opacity-80"
         disabled={isLoading}
       />
       <button
         type="submit"
         disabled={isLoading || !userInput.trim()}
-        className="bg-felineGreen-dark text-white px-6 py-3 rounded-lg font-semibold hover:bg-felineGreen-darker disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-felineGreen-dark text-white  px-6 py-3 rounded-lg font-semibold hover:bg-felineGreen-darker disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? 'Generuję historię...' : 'Opowiedz'}
       </button>

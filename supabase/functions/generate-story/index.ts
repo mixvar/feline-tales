@@ -23,19 +23,23 @@ const SYSTEM_PROMPT_BASE = `
   Jeśli dane wejściowe użytkownika nie mają sensu w tym kontekście, po prostu wygeneruj losową historię.
   Wejście użytkownika powinno nadać temat historii, może mieć wpływ na fabułę, bohaterów i świat.
   Historia musi zawierać koci motyw, np kociego bohatera lub koci świat.
-  Opowiadanie powinno zawierać od 150 do 250 słów.
+  Opowiadanie powinno zawierać od 100 do 200 słów.
   Unikaj utartych motywów.
 `;
 
 const SYSTEM_ENDING_PROMPTS = [
   "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym",
   "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym. Dodatkowo podkręć motyw kociego świata - wszyscy bohaterowie i cały świat jest koci.",
-  "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym. Opowiadanie nie powinno być dziecinne, świat i bohaterowie powini być bardziej realistyczni niż w bajkach dla dzieci i nieco mroczni. Nadal jest to opowiadanie w fantastycznym świecie, tylko dla starszych odbiorców.",
+  "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera. Opowiadanie nie powinno być dziecinne, świat i bohaterowie powini być bardziej realistyczni niż w bajkach dla dzieci i nieco mroczni. Nadal jest to opowiadanie w fantastycznym świecie, tylko dla starszych odbiorców.",
   "Historia ma być wyjątkowo słodka i pozytywna. Bohater zdobywa wszystko czego chce i jest szczęśliwy. Nie ma żadnego morału ani zwrotu akcji.",
-  "Historia ma przybrać słodkokwaśny charakter i niespodziwaną porażkę dla bohatera. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata",
+  "Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.",
   "Historia ma mieć zakończenie otwarte do interpretacji przez słuchacza, bez jasnej odpowiedzi co się stało. Nie powinna zawierać typowego dla bajek morału. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata",
-  "Historia ma zaskoczyć słuchacza tym, że zamiast typowej bajki w fantastycznym świecie, próbuje być realistyczna i opowiadać o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
+  "Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
 ];
+
+const SYSTEM_STORY_REFINMENT_PROMPT = `
+  Popraw lekko historię aby była bardziej interesująca a zakończenie sensowne. Pamiętaj o wcześniejszych wytycznych. Zmieść się w zakresie od 150 do 250 słów. Nie zmieniaj nazw bohaterów.
+`;
 
 const IMAGE_PROMPT_GEN_PROMPT = `
   Jesteś generatorem opisów obrazów do przedstawionych historii.
@@ -98,21 +102,23 @@ Deno.serve(async (req) => {
 
     const { storyText, storySystemPrompt } = await generateStoryText(userInput);
 
-    // Run image and title generation in parallel
-    const [{ imageRef, imagePrompt }, title] = await Promise.all([
-      generateImagePrompt(storyText)
-        .then(async (imagePrompt) => ({
-          imagePrompt,
-          imageRef: await generateImage(imagePrompt).then((url) =>
-            uploadImageToStorage(supabase, user.id, url)
-          ),
-        })),
-      generateTitle(storyText),
-    ]);
+    // Run image generation, title generation and story refinement in parallel
+    const [{ imageRef, imagePrompt }, title, refinedStoryText] = await Promise
+      .all([
+        generateImagePrompt(storyText)
+          .then(async (imagePrompt) => ({
+            imagePrompt,
+            imageRef: await generateImage(imagePrompt).then((url) =>
+              uploadImageToStorage(supabase, user.id, url)
+            ),
+          })),
+        generateTitle(storyText),
+        refineStoryText(storyText, userInput, storySystemPrompt),
+      ]);
 
     const storyId = await insertStoryIntoDb(supabase, {
       title: title,
-      content: storyText,
+      content: refinedStoryText,
       cover_image_source_prompt: imagePrompt,
       cover_image_file_ref: imageRef,
       content_source_prompt: storySystemPrompt,
@@ -137,6 +143,34 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+async function refineStoryText(
+  storyText: string,
+  userInput: string,
+  storySystemPrompt: string,
+): Promise<string> {
+  console.log("refining story text...");
+  const storyCompletion2 = await openAi.chat.completions.create({
+    model: "gpt-4o",
+    store: false,
+    stream: false,
+    temperature: 1,
+    messages: [
+      { role: "developer", content: storySystemPrompt },
+      { role: "user", content: userInput },
+      { role: "assistant", content: storyText },
+      { role: "developer", content: SYSTEM_STORY_REFINMENT_PROMPT },
+    ],
+  });
+
+  const refinedStoryText = storyCompletion2.choices[0].message.content?.trim();
+
+  if (!refinedStoryText) {
+    throw new Error("Failed to generate the refined story");
+  }
+
+  return refinedStoryText;
+}
 
 async function generateStoryText(
   userInput: string,
@@ -311,8 +345,6 @@ const uploadImageToStorage = async (
     if (error) {
       throw error;
     }
-
-    console.log("image uploaded to storage", data);
 
     return data.path;
   } catch (error) {
