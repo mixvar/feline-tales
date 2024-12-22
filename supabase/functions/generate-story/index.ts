@@ -43,6 +43,15 @@ const IMAGE_PROMPT_GEN_PROMPT = `
 const IMAGE_GEN_SYSTEM_PROMPT =
   "Generate a cover image for a fantasy story in style of a book illustration.";
 
+const TITLE_GEN_PROMPT = `
+  Jesteś generatorem tytułów do opowiadań.
+  Wygeneruj krótki, chwytliwy tytuł do przedstawionej historii.
+  Tytuł powinien być po polsku, max 6 słów.
+  Tytuł powinien być intrygujący i nawiązywać do głównego wątku lub bohatera historii.
+  Nie używaj słowa "kot" ani "kotek" w tytule, chyba że jest to absolutnie kluczowe dla historii.
+  Nie dodawaj kropki na końcu tytułu.
+`;
+
 type RequestPayload = {
   userInput: string;
 };
@@ -52,6 +61,7 @@ type ResponsePayload = {
   imagePrompt: string;
   storySystemPrompt: string;
   imageUrl: string;
+  title: string;
   // storyId: string;
 };
 
@@ -84,8 +94,16 @@ Deno.serve(async (req) => {
     const { userInput } = (await req.json()) as RequestPayload;
 
     const { storyText, storySystemPrompt } = await generateStoryText(userInput);
-    const imagePrompt = await generateImagePrompt(storyText);
-    const imageUrl = await generateImage(imagePrompt);
+
+    // Run image and title generation in parallel
+    const [{ imageUrl, imagePrompt }, title] = await Promise.all([
+      generateImagePrompt(storyText)
+        .then(async (imagePrompt) => ({
+          imagePrompt,
+          imageUrl: await generateImage(imagePrompt),
+        })),
+      generateTitle(storyText),
+    ]);
 
     console.log("success");
 
@@ -94,6 +112,7 @@ Deno.serve(async (req) => {
       storyText,
       imagePrompt,
       imageUrl,
+      title,
       // storyId: "<<TODO>>",
     };
 
@@ -234,6 +253,28 @@ async function generateImage(imagePrompt: string): Promise<string> {
     console.log("fallback image generated successfully");
     return imageUrl;
   }
+}
+
+async function generateTitle(storyText: string): Promise<string> {
+  console.log("generating title...");
+  const titleCompletion = await openAi.chat.completions.create({
+    model: "gpt-4o",
+    store: false,
+    stream: false,
+    temperature: 1.1,
+    messages: [
+      { role: "system", content: TITLE_GEN_PROMPT },
+      { role: "user", content: storyText },
+    ],
+  });
+
+  const title = titleCompletion.choices[0].message.content?.trim();
+
+  if (!title) {
+    throw new Error("Failed to generate the title");
+  }
+
+  return title;
 }
 
 const getRandomArrayElement = <T>(array: T[]): T => {

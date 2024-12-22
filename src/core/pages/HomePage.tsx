@@ -103,6 +103,7 @@ const StoryDisplay = ({ story, onReset }: StoryDisplayProps) => {
             />
           </div>
           <div className="p-6 md:w-1/2 md:overflow-y-auto md:max-h-[500px]">
+            <h2 className="font-cursive text-xl md:text-3xl mb-4">{story.title}</h2>
             <p className="text-lg leading-relaxed whitespace-pre-wrap">{story.storyText}</p>
           </div>
         </div>
@@ -118,6 +119,7 @@ const StoryDisplay = ({ story, onReset }: StoryDisplayProps) => {
 };
 
 interface GenerateStoryResponsePayload {
+  title: string;
   storyText: string;
   imageUrl: string;
   imagePrompt: string;
