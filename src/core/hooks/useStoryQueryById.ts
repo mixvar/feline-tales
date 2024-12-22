@@ -1,17 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { STORY_BY_ID_QUERY_KEY } from "../lib/query-keys.ts";
 import { StoryEntity, supabase } from "../lib/supabase.ts";
-import { getStorageFileUrl } from "../lib/storage.ts";
-
-export const STORIES_QUERY_KEY = "stories";
-export const STORY_BY_ID_QUERY_KEY = (
-  storyId: string,
-) => [...STORIES_QUERY_KEY, "id", storyId];
-
-export interface StoryObject {
-  title: string;
-  text: string;
-  imageUrl?: string;
-}
+import { createStoryObject, StoryObject } from "../utils/stories.ts";
 
 export const useStoryQueryById = (storyId: string) => {
   const query = useQuery({
@@ -34,11 +24,5 @@ const fetchStoryWithImage = async (storyId: string): Promise<StoryObject> => {
     throw new Error("Nie udało się pobrać historii");
   }
 
-  const imageUrl = await getStorageFileUrl("images", data.cover_image_file_ref);
-
-  return {
-    title: data.title,
-    text: data.content,
-    imageUrl,
-  };
+  return await createStoryObject(data);
 };

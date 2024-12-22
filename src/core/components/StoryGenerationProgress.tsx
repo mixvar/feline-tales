@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StoryDisplaySkeleton } from './StoryDisplaySkeleton';
 
-const CHANGE_MESSAGE_INTERVAL = 2500;
+const CHANGE_MESSAGE_INTERVAL = 3_000;
 
 const PROGRESS_MESSAGES = [
   'Delikatnie szturcham śpiącego pisarza łapką...',

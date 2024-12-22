@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { PrimaryButton } from './base/PrimaryButton';
+import { SecondaryButton } from './base/SecondaryButton';
 
 interface StoryInputFormProps {
   onSubmit: (input: string) => void;
+  onHistoryClick: () => void;
   error: string | null;
 }
 
-export const StoryInputForm = ({ onSubmit, error }: StoryInputFormProps) => {
+export const StoryInputForm = ({ onSubmit, onHistoryClick, error }: StoryInputFormProps) => {
   const [userInput, setUserInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -20,15 +23,16 @@ export const StoryInputForm = ({ onSubmit, error }: StoryInputFormProps) => {
         value={userInput}
         onChange={(e) => setUserInput(e.target.value)}
         placeholder="Opowiedz mi historię o..."
-        className="w-full p-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none bg-white bg-opacity-80"
+        className="w-full p-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none bg-white bg-opacity-50 placeholder:text-felineGreen-dark focus:outline-felineGreen-dark"
       />
-      <button
-        type="submit"
-        disabled={!userInput.trim()}
-        className="bg-felineGreen-dark text-white  px-6 py-3 rounded-lg font-semibold hover:bg-felineGreen-darker disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Opowiedz ✨
-      </button>
+      <div className="flex flex-col gap-2">
+        <PrimaryButton disabled={!userInput.trim()} buttonProps={{ type: 'submit' }}>
+          Opowiedz ✨
+        </PrimaryButton>
+        <SecondaryButton onClick={onHistoryClick} buttonProps={{ type: 'button' }}>
+          Zobacz archiwum 📚
+        </SecondaryButton>
+      </div>
       {error && <p className="text-red-500 text-center">{error}</p>}
     </form>
   );

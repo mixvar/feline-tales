@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import { STORY_BY_ID_QUERY_KEY } from "../lib/query-keys.ts";
 
 export const useStoryGeneration = () => {
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [storyId, setStoryId] = useState<string | null>(null);
@@ -21,6 +24,11 @@ export const useStoryGeneration = () => {
       }
 
       setStoryId(resp.data.storyId);
+
+      // Invalidate the query for the newly generated story - also refreshing the list
+      void queryClient.invalidateQueries({
+        queryKey: STORY_BY_ID_QUERY_KEY(resp.data.storyId),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Coś poszło nie tak");
     } finally {
