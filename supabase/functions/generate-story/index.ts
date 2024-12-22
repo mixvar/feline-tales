@@ -2,7 +2,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { contentTypeHeaders, corsHeaders } from "../_shared/headers.ts";
-import { getSupabaseClient } from "../_shared/supabase-client.ts";
+import {
+  getSupabaseClient,
+  getSupabaseUser,
+  StoryEntity,
+  SupabaseClient,
+} from "../_shared/supabase.ts";
 import { OpenAI } from "npm:openai";
 import { Runware } from "npm:@runware/sdk-js";
 
@@ -57,12 +62,7 @@ type RequestPayload = {
 };
 
 type ResponsePayload = {
-  storyText: string;
-  imagePrompt: string;
-  storySystemPrompt: string;
-  imageUrl: string;
-  title: string;
-  // storyId: string;
+  storyId: string;
 };
 
 const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
@@ -91,30 +91,37 @@ Deno.serve(async (req) => {
   try {
     const supabase = getSupabaseClient(req);
 
+    const user = await getSupabaseUser(supabase, req);
+    if (!user) throw new Error("User not found");
+
     const { userInput } = (await req.json()) as RequestPayload;
 
     const { storyText, storySystemPrompt } = await generateStoryText(userInput);
 
     // Run image and title generation in parallel
-    const [{ imageUrl, imagePrompt }, title] = await Promise.all([
+    const [{ imageRef, imagePrompt }, title] = await Promise.all([
       generateImagePrompt(storyText)
         .then(async (imagePrompt) => ({
           imagePrompt,
-          imageUrl: await generateImage(imagePrompt),
+          imageRef: await generateImage(imagePrompt).then((url) =>
+            uploadImageToStorage(supabase, user.id, url)
+          ),
         })),
       generateTitle(storyText),
     ]);
 
-    console.log("success");
+    const storyId = await insertStoryIntoDb(supabase, {
+      title: title,
+      content: storyText,
+      cover_image_source_prompt: imagePrompt,
+      cover_image_file_ref: imageRef,
+      content_source_prompt: storySystemPrompt,
+      user_input_transcript: userInput,
+    });
 
-    const response: ResponsePayload = {
-      storySystemPrompt,
-      storyText,
-      imagePrompt,
-      imageUrl,
-      title,
-      // storyId: "<<TODO>>",
-    };
+    console.log(`story "${title}" (${storyId}) created successfully!`);
+
+    const response: ResponsePayload = { storyId };
 
     return new Response(
       JSON.stringify(response),
@@ -276,6 +283,76 @@ async function generateTitle(storyText: string): Promise<string> {
 
   return title;
 }
+
+const uploadImageToStorage = async (
+  supabase: SupabaseClient,
+  userId: string,
+  imageUrl: string,
+): Promise<string> => {
+  console.log("uploading image to storage bucket...");
+
+  try {
+    const imageId = crypto.randomUUID();
+    const imageFile = await fetch(imageUrl).then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch the image");
+      return res.blob();
+    });
+
+    const { data, error } = await supabase.storage.from("images").upload(
+      `${userId}/${imageId}.webp`,
+      imageFile,
+      {
+        cacheControl: "3600",
+        contentType: "image/webp",
+        upsert: false,
+      },
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    console.log("image uploaded to storage", data);
+
+    return data.path;
+  } catch (error) {
+    console.error("Failed to upload image to storage");
+    throw error;
+  }
+};
+
+type CreateStoryPayload = Omit<
+  Partial<StoryEntity>,
+  "id" | "created_at" | "user_id"
+>;
+
+const insertStoryIntoDb = async (
+  supabase: SupabaseClient,
+  story: CreateStoryPayload,
+) => {
+  console.log("inserting story into database...");
+  try {
+    const { data, error } = await supabase
+      .from("stories")
+      .insert([story as StoryEntity])
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    const storyId = data[0]?.id;
+
+    if (!storyId) {
+      throw new Error("StoryId not created");
+    }
+
+    return storyId;
+  } catch (error) {
+    console.error("Failed to insert story into database");
+    throw error;
+  }
+};
 
 const getRandomArrayElement = <T>(array: T[]): T => {
   return array[Math.floor(Math.random() * array.length)];

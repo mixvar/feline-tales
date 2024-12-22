@@ -1,6 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
+import { Database, Tables } from "./supabase-types";
 
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
 );
+
+export type StoryEntity = Tables<"stories">;
