@@ -2,11 +2,10 @@ import { useState } from 'react';
 
 interface StoryInputFormProps {
   onSubmit: (input: string) => void;
-  isLoading: boolean;
   error: string | null;
 }
 
-export const StoryInputForm = ({ onSubmit, isLoading, error }: StoryInputFormProps) => {
+export const StoryInputForm = ({ onSubmit, error }: StoryInputFormProps) => {
   const [userInput, setUserInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,14 +21,13 @@ export const StoryInputForm = ({ onSubmit, isLoading, error }: StoryInputFormPro
         onChange={(e) => setUserInput(e.target.value)}
         placeholder="Opowiedz mi historię o..."
         className="w-full p-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none bg-white bg-opacity-80"
-        disabled={isLoading}
       />
       <button
         type="submit"
-        disabled={isLoading || !userInput.trim()}
+        disabled={!userInput.trim()}
         className="bg-felineGreen-dark text-white  px-6 py-3 rounded-lg font-semibold hover:bg-felineGreen-darker disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? 'Generuję historię...' : 'Opowiedz'}
+        Opowiedz ✨
       </button>
       {error && <p className="text-red-500 text-center">{error}</p>}
     </form>

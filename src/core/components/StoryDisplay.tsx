@@ -1,4 +1,5 @@
 import { useStoryQueryById } from '../hooks/useStoryQueryById.ts';
+import { StoryDisplaySkeleton } from './StoryDisplaySkeleton';
 
 interface StoryDisplayProps {
   storyId: string;
@@ -9,7 +10,7 @@ export const StoryDisplay = ({ storyId, onReset }: StoryDisplayProps) => {
   const storyQuery = useStoryQueryById(storyId);
 
   if (storyQuery.isLoading) {
-    return <div>Loading...</div>;
+    return <StoryDisplaySkeleton />;
   }
 
   if (storyQuery.error) {
