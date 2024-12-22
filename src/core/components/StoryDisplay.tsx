@@ -17,7 +17,7 @@ export const StoryDisplay = ({ story, renderButton }: StoryDisplayProps) => (
           />
         </div>
         <div className="p-6 md:w-1/2 md:overflow-y-auto md:max-h-[500px]">
-          <h2 className="font-cursive text-xl md:text-3xl mb-4">{story.title}</h2>
+          <h2 className="font-cursive text-2xl md:text-4xl mb-4">{story.title}</h2>
           <p className="text-lg leading-relaxed whitespace-pre-wrap">{story.text}</p>
         </div>
       </div>
