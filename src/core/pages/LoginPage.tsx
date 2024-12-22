@@ -49,7 +49,7 @@ export const LoginPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 gap-8 md:gap-12">
       <h1 className="text-3xl md:text-5xl font-cursive text-center text-felineGreen-dark drop-shadow-lg">
-        Wkrocz do Krainy Magicznych Mruczeń
+        Poznaj Sekrety Kociej Krainy
       </h1>
       <div className="w-full max-w-md bg-white bg-opacity-50 rounded-lg shadow-lg p-8">
         <p className="text-gray-600 mb-6">
@@ -67,7 +67,7 @@ export const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={status === 'loading' || status === 'success'}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-felineGreen-dark focus:border-felineGreen-dark"
+              className="w-full px-4 py-2 border border-gray-300 bg-slate-100 bg-transparent-50 rounded-md focus:ring-2 focus:ring-felineGreen-dark focus:border-felineGreen-dark"
               placeholder="Wpisz swój email"
             />
             {validationError && <p className="text-red-600 text-sm mt-1">{validationError}</p>}
