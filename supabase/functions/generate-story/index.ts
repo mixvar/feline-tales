@@ -15,7 +15,7 @@ console.log(
   "generate-story function is running",
 );
 
-const NARRATION_ENABLED = () => false;
+const NARRATION_ENABLED = () => true;
 
 const DESIRED_IMAGE_TIMEOUT_MS = 30_000;
 

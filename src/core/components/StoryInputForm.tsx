@@ -19,12 +19,16 @@ export const StoryInputForm = ({ onSubmit, onHistoryClick, error }: StoryInputFo
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl flex flex-col gap-4">
-      <textarea
-        value={userInput}
-        onChange={(e) => setUserInput(e.target.value)}
-        placeholder="Opowiedz mi historię o..."
-        className="w-full p-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none bg-white bg-opacity-50 placeholder:text-felineGreen-dark focus:outline-felineGreen-dark"
-      />
+      <div className="relative">
+        <div className="absolute top-4 left-0 right-0 text-center text-felineGreen-dark pointer-events-none opacity-80">
+          Opowiedz mi historię o...
+        </div>
+        <textarea
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          className="w-full pt-12 px-4 pb-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none bg-white bg-opacity-50 focus:outline-felineGreen-dark text-left text-lg"
+        />
+      </div>
       <div className="flex flex-col gap-2">
         <PrimaryButton disabled={!userInput.trim()} buttonProps={{ type: 'submit' }}>
           Opowiedz ✨

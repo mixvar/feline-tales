@@ -5,8 +5,9 @@ export interface StoryObject {
   id: string;
   title: string;
   text: string;
-  imageUrl?: string;
   createdAt: string;
+  imageUrl?: string;
+  narrationAudioUrl?: string;
 }
 
 export const createStoryObject = async (
@@ -17,11 +18,17 @@ export const createStoryObject = async (
     story.cover_image_file_ref,
   );
 
+  const narrationAudioUrl = await getStorageFileUrl(
+    "narrations",
+    story.content_audio_file_ref,
+  );
+
   return {
     id: story.id,
     title: story.title,
     text: story.content,
-    imageUrl,
     createdAt: story.created_at,
+    imageUrl,
+    narrationAudioUrl,
   };
 };
