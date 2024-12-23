@@ -62,8 +62,9 @@ const TITLE_GEN_PROMPT = `
   Wygeneruj krótki, chwytliwy tytuł do przedstawionej historii.
   Tytuł powinien być po polsku, max 6 słów.
   Tytuł powinien być intrygujący i nawiązywać do głównego wątku lub bohatera historii.
-  Nie używaj słowa "kot" ani "kotek" w tytule, chyba że jest to absolutnie kluczowe dla historii.
+  Unikaj słów "kot" ani "kotek" w tytule.
   Nie dodawaj kropki na końcu tytułu.
+  Ważna jest poprawność gramatyczna.
 `;
 
 type RequestPayload = {
