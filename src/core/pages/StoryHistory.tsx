@@ -24,7 +24,7 @@ export const StoryHistory = () => {
         </p>
       )}
 
-      {storyHistory.isLoading && (
+      {storyHistory.isPending && (
         <div className="flex flex-col gap-4">
           {Array.from({ length: 3 }).map((_, index) => (
             <StoryPreviewTileSkeleton key={index} />

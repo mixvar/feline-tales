@@ -21,7 +21,7 @@ export const StoryDisplayWrapper = ({ storyId, isNew }: StoryDisplayWrapperProps
     void navigate('/history');
   };
 
-  if (storyQuery.isLoading) {
+  if (storyQuery.isPending) {
     return <StoryDisplaySkeleton />;
   }
 
