@@ -38,7 +38,7 @@ const SYSTEM_ENDING_PROMPTS = [
   "Historia ma mieć zakończenie otwarte do interpretacji przez słuchacza, bez jasnej odpowiedzi co się stało. Nie powinna zawierać typowego dla bajek morału. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata",
   "Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
   "Zawrzyj motyw walki dobra ze złem. Stwórz czarny charatker z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater na końcu zostaje pokonany ale istnieje groźba że powróci.",
-  "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć swoje lęki aby być z ukochaną/ukochanym. Niestety kończy się tragicznie.",
+  "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla jednego z kochanków.",
 ];
 
 const SYSTEM_STORY_REFINMENT_PROMPT = `
