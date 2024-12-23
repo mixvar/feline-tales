@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react';
 import { StoryDisplaySkeleton } from './StoryDisplaySkeleton';
 
-const CHANGE_MESSAGE_INTERVAL = 3_000;
+const CHANGE_MESSAGE_INTERVAL = 4000;
 
 const PROGRESS_MESSAGES = [
   'Delikatnie szturcham śpiącego pisarza łapką...',
   'Mruczeniem przywołuję wenę twórczą...',
   'Łapka za łapką, historia nabiera kształtu...',
-  'Z pędzlem w zębach, kreuje się artystyczne dzieło...',
+  'Przerwa na herbatę 🫖',
+  'Pisarz właśnie zmienił zakończenie...',
+  'Kot malarz już moczy ogon w farbie aby namalować ilustrację...',
+  'Profesonalny narrator analizuje skrypt...',
+  'Historia wymaga recenzji poprzez lożę kocich krytyków...',
   'Ostatnie przeciągnięcie i gotowe... Mrrr...',
+  'Jest! Wysyłanie pocztą gołębiową...',
 ];
 
 export const StoryGenerationProgress = () => {

@@ -62,8 +62,10 @@ const AppLogo = ({
       <img
         onClick={onClick}
         className={clsx(
-          'transition-all duration-300 cursor-pointer',
-          showSmallLayout ? 'h-[150px] md:h-[200px]' : 'h-[300px] md:h-[400px]'
+          'transition-all duration-300',
+          showSmallLayout
+            ? 'h-[150px] md:h-[200px] cursor-pointer hover:scale-105'
+            : 'h-[300px] md:h-[400px]'
         )}
         src={felineStoriesLogo}
         alt="logo"

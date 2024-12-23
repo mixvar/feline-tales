@@ -24,7 +24,7 @@ export const UserWidget = ({ user }: { user: User }) => {
     : 'https://www.gravatar.com/avatar/?d=mp';
 
   return (
-    <div className="fixed top-4 right-4" ref={dropdownRef}>
+    <div className="fixed top-4 right-4 z-10" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-10 h-10 rounded-full overflow-hidden border-2 border-felineGreen-dark hover:border-felineGreen-light transition-colors"

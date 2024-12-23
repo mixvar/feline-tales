@@ -22,14 +22,14 @@ export const StoryPreviewTile = ({ story, onClick }: StoryPreviewTileProps) => {
       )}
     >
       <div className="flex">
-        <div className="w-1/3 flex-shrink-0 overflow-hidden">
+        <div className="w-1/4 flex-shrink-0 overflow-hidden">
           <img
             src={story.imageUrl}
             alt="Ilustracja do historii"
             className="w-full h-[150px] object-cover scale-110 group-hover:scale-105 transition-transform duration-500 bg-felineBg-dark"
           />
         </div>
-        <div className="p-4 w-2/3 flex flex-col gap-1">
+        <div className="p-4 w-3/4 flex flex-col gap-1">
           <h3 className="font-cursive text-2xl text-felineGreen-dark line-clamp-1">
             {story.title}
           </h3>

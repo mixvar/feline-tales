@@ -6,8 +6,8 @@ interface StoryDisplayProps {
 }
 
 export const StoryDisplay = ({ story, renderButton }: StoryDisplayProps) => (
-  <div className="w-full max-w-6xl flex flex-col gap-6 group">
-    <div className="bg-white bg-opacity-50 rounded-xl shadow-lg overflow-hidden">
+  <div className="w-full max-w-6xl flex flex-col gap-6">
+    <div className="bg-white bg-opacity-50 rounded-xl shadow-lg overflow-hidden group">
       <div className="md:flex">
         <div className="md:w-1/2 md:flex-shrink-0 overflow-hidden">
           <img

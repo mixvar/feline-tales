@@ -15,7 +15,7 @@ console.log(
   "generate-story function is running",
 );
 
-const DESIRED_IMAGE_TIMEOUT_MS = 10000;
+const DESIRED_IMAGE_TIMEOUT_MS = 15_000;
 
 const SYSTEM_PROMPT_BASE = `
   Jesteś opowiadaczem kocich historii. 
@@ -102,30 +102,48 @@ Deno.serve(async (req) => {
 
     const { storyText, storySystemPrompt } = await generateStoryText(userInput);
 
-    // Run image generation, title generation and story refinement in parallel
-    const [{ imageRef, imagePrompt }, title, refinedStoryText] = await Promise
-      .all([
-        generateImagePrompt(storyText)
-          .then(async (imagePrompt) => ({
-            imagePrompt,
-            imageRef: await generateImage(imagePrompt).then((url) =>
-              uploadImageToStorage(supabase, user.id, url)
-            ),
-          })),
+    // run whatever is possible in parallel
+    const [
+      { imagePrompt, imageRef },
+      { storyTitle, refinedStoryText, narrationRef },
+    ] = await Promise.all([
+      generateImagePrompt(storyText)
+        .then(async (imagePrompt) => ({
+          imagePrompt,
+          imageRef: await generateImage(imagePrompt)
+            .then((url) => uploadImageToStorage(supabase, user.id, url))
+            .catch((error) => {
+              console.error("Failed to create cover image", error.message);
+              return null;
+            }),
+        })),
+
+      Promise.all([
         generateTitle(storyText),
         refineStoryText(storyText, userInput, storySystemPrompt),
-      ]);
+      ]).then(async ([storyTitle, refinedStoryText]) => ({
+        storyTitle,
+        refinedStoryText,
+        narrationRef: await generateNarration(storyTitle, refinedStoryText)
+          .then((file) => uploadNarrationToStorage(supabase, user.id, file))
+          .catch((error) => {
+            console.error("Failed to create narration", error.message);
+            return null;
+          }),
+      })),
+    ]);
 
     const storyId = await insertStoryIntoDb(supabase, {
-      title: title,
+      title: storyTitle,
       content: refinedStoryText,
       cover_image_source_prompt: imagePrompt,
       cover_image_file_ref: imageRef,
       content_source_prompt: storySystemPrompt,
       user_input_transcript: userInput,
+      content_audio_file_ref: narrationRef,
     });
 
-    console.log(`story "${title}" (${storyId}) created successfully!`);
+    console.log(`story "${storyTitle}" (${storyId}) created successfully!`);
 
     const response: ResponsePayload = { storyId };
 
@@ -169,6 +187,7 @@ async function refineStoryText(
     throw new Error("Failed to generate the refined story");
   }
 
+  console.log("Story text refined successfully");
   return refinedStoryText;
 }
 
@@ -198,6 +217,7 @@ async function generateStoryText(
     throw new Error("Failed to generate the story");
   }
 
+  console.log("Story text generated successfully");
   return { storyText, storySystemPrompt };
 }
 
@@ -221,6 +241,7 @@ async function generateImagePrompt(storyText: string): Promise<string> {
     throw new Error("Failed to generate the image prompt");
   }
 
+  console.log("Image prompt generated successfully");
   return [IMAGE_GEN_SYSTEM_PROMPT, dynamicImagePrompt].join("\n");
 }
 
@@ -315,8 +336,96 @@ async function generateTitle(storyText: string): Promise<string> {
     throw new Error("Failed to generate the title");
   }
 
+  console.log("Title generated successfully");
   return title;
 }
+
+const generateNarration = async (
+  storyTitle: string,
+  storyText: string,
+): Promise<Blob> => {
+  console.log("generating narration...");
+
+  const elevenLabsApiKey = Deno.env.get("ELEVENLABS_API_KEY");
+  if (!elevenLabsApiKey) {
+    throw new Error("ELEVENLABS_API_KEY is not set");
+  }
+
+  const elevenLabsVoiceId = Deno.env.get("ELEVENLABS_VOICE_ID");
+  if (!elevenLabsVoiceId) {
+    throw new Error("ELEVENLABS_VOICE_ID is not set");
+  }
+
+  const url =
+    `https://api.elevenlabs.io/v1/text-to-speech/${elevenLabsVoiceId}`;
+
+  const narrationScript = [
+    `Oto opowiadanie: ${storyTitle}`,
+    '<break time="0.5s" />',
+    storyText,
+  ].join(" ");
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Xi-Api-Key": elevenLabsApiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text: narrationScript,
+      model_id: "eleven_multilingual_v2",
+      voice_settings: {
+        stability: 0.4,
+        similarity_boost: 0.6,
+        style: 0,
+        use_speaker_boost: true,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorMessage = await response.text().then((txt) =>
+      `${response.statusText}: ${txt}`
+    ).catch(() => response.statusText);
+
+    throw new Error(`Failed to generate narration: ${errorMessage}`);
+  }
+
+  console.log("Narration generated successfully");
+  return response.blob();
+};
+
+const uploadNarrationToStorage = async (
+  supabase: SupabaseClient,
+  userId: string,
+  narrationFile: Blob,
+): Promise<string> => {
+  console.log("uploading narration to storage bucket...");
+
+  try {
+    const narrationId = crypto.randomUUID();
+
+    const { data, error } = await supabase.storage.from("narrations").upload(
+      `${userId}/${narrationId}.mp3`,
+      narrationFile,
+      {
+        cacheControl: "3600",
+        contentType: "audio/mpeg",
+        upsert: false,
+      },
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    console.log("Narration uploaded to storage successfully", data.path);
+    return data.path;
+  } catch (error) {
+    console.error("Failed to upload narration to storage");
+    throw error;
+  }
+};
 
 const uploadImageToStorage = async (
   supabase: SupabaseClient,
@@ -346,6 +455,7 @@ const uploadImageToStorage = async (
       throw error;
     }
 
+    console.log("Image uploaded to storage successfully", data.path);
     return data.path;
   } catch (error) {
     console.error("Failed to upload image to storage");
