@@ -9,7 +9,7 @@ export const useStoryGeneration = () => {
   const [error, setError] = useState<string | null>(null);
   const [storyId, setStoryId] = useState<string | null>(null);
 
-  const generate = async (userInput: string) => {
+  const generate = async (userInput: string): Promise<void> => {
     try {
       setIsLoading(true);
       setError(null);
@@ -23,11 +23,12 @@ export const useStoryGeneration = () => {
         throw new Error("Nie udało się wygenerować historii");
       }
 
-      setStoryId(resp.data.storyId);
+      const newStoryId = resp.data.storyId;
+      setStoryId(newStoryId);
 
       // Invalidate the query for the newly generated story - also refreshing the list
       void queryClient.invalidateQueries({
-        queryKey: STORY_BY_ID_QUERY_KEY(resp.data.storyId),
+        queryKey: STORY_BY_ID_QUERY_KEY(newStoryId),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Coś poszło nie tak");

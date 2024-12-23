@@ -12,6 +12,7 @@ export interface StoryObject {
 
 export const createStoryObject = async (
   story: StoryEntity,
+  options: { excludeNarration?: boolean } = {},
 ): Promise<StoryObject> => {
   const imageUrl = await getStorageFileUrl(
     "images",
@@ -20,7 +21,7 @@ export const createStoryObject = async (
 
   const narrationAudioUrl = await getStorageFileUrl(
     "narrations",
-    story.content_audio_file_ref,
+    options.excludeNarration ? null : story.content_audio_file_ref,
   );
 
   return {

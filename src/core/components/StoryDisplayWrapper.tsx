@@ -1,15 +1,25 @@
+import { useNavigate } from 'react-router-dom';
 import { useStoryQueryById } from '../hooks/useStoryQueryById.ts';
 import { PrimaryButton } from './base/PrimaryButton.tsx';
 import { StoryDisplay } from './StoryDisplay.tsx';
 import { StoryDisplaySkeleton } from './StoryDisplaySkeleton.tsx';
+import { SecondaryButton } from './base/SecondaryButton.tsx';
 
 interface StoryDisplayWrapperProps {
   storyId: string;
-  onReset: () => void;
+  isNew?: boolean;
 }
 
-export const StoryDisplayWrapper = ({ storyId, onReset }: StoryDisplayWrapperProps) => {
+export const StoryDisplayWrapper = ({ storyId, isNew }: StoryDisplayWrapperProps) => {
   const storyQuery = useStoryQueryById(storyId);
+  const navigate = useNavigate();
+
+  const goToHome = () => {
+    void navigate('/');
+  };
+  const goToHistory = () => {
+    void navigate('/history');
+  };
 
   if (storyQuery.isLoading) {
     return <StoryDisplaySkeleton />;
@@ -26,9 +36,13 @@ export const StoryDisplayWrapper = ({ storyId, onReset }: StoryDisplayWrapperPro
   return (
     <StoryDisplay
       story={storyQuery.data}
-      renderButton={() => (
-        <PrimaryButton onClick={onReset}>Opowiedz nową historię 📖</PrimaryButton>
-      )}
+      renderButton={() =>
+        isNew ? (
+          <PrimaryButton onClick={goToHome}>Opowiedz nową historię 📖</PrimaryButton>
+        ) : (
+          <SecondaryButton onClick={goToHistory}>Wróć do archiwum 📚</SecondaryButton>
+        )
+      }
     />
   );
 };

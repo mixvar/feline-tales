@@ -22,9 +22,9 @@ const fetchStoryHistory = async (): Promise<StoryObject[]> => {
     throw new Error("Nie udało się pobrać historii");
   }
 
-  const storiesWithImages = await Promise.all(
-    data.map(createStoryObject),
+  const lightweightStories = await Promise.all(
+    data.map((story) => createStoryObject(story, { excludeNarration: true })),
   );
 
-  return storiesWithImages;
+  return lightweightStories;
 };

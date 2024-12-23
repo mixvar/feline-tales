@@ -26,6 +26,11 @@ export const StoryInputForm = ({ onSubmit, onHistoryClick, error }: StoryInputFo
         <textarea
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+              handleSubmit(e);
+            }
+          }}
           className="w-full pt-12 px-4 pb-4 rounded-lg border border-felineGreen-dark min-h-[100px] resize-none bg-white bg-opacity-50 focus:outline-felineGreen-dark text-left text-lg"
         />
       </div>

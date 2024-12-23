@@ -1,5 +1,5 @@
 import { useAuth } from './hooks/useAuth';
-import { HomePage } from './pages/HomePage';
+import { AppRoutes } from './pages/AppRoutes.tsx';
 import { LoginPage } from './pages/LoginPage';
 
 export const App = () => {
@@ -10,7 +10,7 @@ export const App = () => {
   }
 
   return (
-    <HomePage
+    <AppRoutes
       user={{
         id: session.user.id,
         email: session.user.email,

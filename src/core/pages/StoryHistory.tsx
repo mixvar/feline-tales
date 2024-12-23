@@ -1,31 +1,18 @@
-import { useState } from 'react';
-import { useStoryHistory } from '../hooks/useStoryHistory.ts';
-import { StoryObject } from '../utils/stories.ts';
-import { StoryDisplay } from '../components/StoryDisplay.tsx';
+import { useNavigate } from 'react-router-dom';
 import { StoryPreviewTile } from '../components/StoryPreviewTile.tsx';
 import { StoryPreviewTileSkeleton } from '../components/StoryPreviewTileSkeleton.tsx';
-import { SecondaryButton } from '../components/base/SecondaryButton.tsx';
+import { useStoryHistory } from '../hooks/useStoryHistory.ts';
 
-interface StoryHistoryProps {
-  onClose: () => void;
-}
-
-export const StoryHistory = ({ onClose }: StoryHistoryProps) => {
+export const StoryHistory = () => {
+  const navigate = useNavigate();
   const storyHistory = useStoryHistory();
-  const [selectedStory, setSelectedStory] = useState<StoryObject | null>(null);
 
-  if (selectedStory) {
-    return (
-      <StoryDisplay
-        story={selectedStory}
-        renderButton={() => (
-          <SecondaryButton onClick={() => setSelectedStory(null)}>
-            Wróć do archiwum 📚
-          </SecondaryButton>
-        )}
-      />
-    );
-  }
+  const handleNavigateHome = () => {
+    void navigate('/');
+  };
+  const handleNavigateToStory = (storyId: string) => {
+    void navigate(`/story/${storyId}`);
+  };
 
   return (
     <div className="w-full max-w-2xl flex flex-col gap-4">
@@ -51,7 +38,7 @@ export const StoryHistory = ({ onClose }: StoryHistoryProps) => {
             <StoryPreviewTile
               key={story.id}
               story={story}
-              onClick={() => setSelectedStory(story)}
+              onClick={() => handleNavigateToStory(story.id)}
             />
           ))}
         </div>
@@ -62,7 +49,7 @@ export const StoryHistory = ({ onClose }: StoryHistoryProps) => {
       )}
 
       <button
-        onClick={onClose}
+        onClick={() => handleNavigateHome()}
         className="text-felineGreen-dark hover:text-felineGreen-darker self-center"
       >
         wróć
