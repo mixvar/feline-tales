@@ -21,7 +21,7 @@ export const HomePage = ({ user }: { user: User }) => {
   return (
     <>
       <UserWidget user={user} />
-      <div className="min-h-screen max-w-7xl mx-auto p-4 md:p-8 flex flex-col items-center justify-start gap-4">
+      <div className="min-h-screen max-w-7xl mx-auto p-3 md:p-8 flex flex-col items-center justify-start gap-4">
         <AppLogo
           showSmallLayout={showSmallLayout}
           onClick={() => {
