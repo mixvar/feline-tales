@@ -15,7 +15,9 @@ console.log(
   "generate-story function is running",
 );
 
-const DESIRED_IMAGE_TIMEOUT_MS = 15_000;
+const NARRATION_ENABLED = () => false;
+
+const DESIRED_IMAGE_TIMEOUT_MS = 30_000;
 
 const SYSTEM_PROMPT_BASE = `
   Jesteś opowiadaczem kocich historii. 
@@ -35,22 +37,24 @@ const SYSTEM_ENDING_PROMPTS = [
   "Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.",
   "Historia ma mieć zakończenie otwarte do interpretacji przez słuchacza, bez jasnej odpowiedzi co się stało. Nie powinna zawierać typowego dla bajek morału. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata",
   "Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
+  "Zawrzyj motyw walki dobra ze złem. Stwórz czarny charatker z którym zmaga się bohater. Historia dla starszych odbiorców.",
 ];
 
 const SYSTEM_STORY_REFINMENT_PROMPT = `
-  Popraw lekko historię aby była bardziej interesująca a zakończenie sensowne. Pamiętaj o wcześniejszych wytycznych. Zmieść się w zakresie od 150 do 250 słów. Nie zmieniaj nazw bohaterów.
+  Popraw lekko historię aby była bardziej interesująca a zakończenie sensowne. 
+  Pamiętaj o wcześniejszych wytycznych. Zmieść się w zakresie od 150 do 250 słów. Nie zmieniaj nazw bohaterów.
+  Jeżeli tekst zawiera błędy gramatyczne albo nieistniejące słowa, popraw je.
 `;
 
 const IMAGE_PROMPT_GEN_PROMPT = `
   Jesteś generatorem opisów obrazów do przedstawionych historii.
-  Wygeneruj krótki i bardzo uproszczony opis sceny przedstawiającej głównego bohatera na początku historii.
-  Użyj prostego języka i opisz jak wygląda scena, tak aby można było wygenerować obraz z tego opisu. 
-  Skup się tylko na głównym bohaterze, jego wyglądzie, pozie i podstawowych cechach jego otoczenia. Nie zdradzaj dalszych elementów historii. Scena ma być bardzo prosta.
   Wygeneruj opis po angielsku, max 50 słów.
+  Opisz krótko w jakim tonie ma być obraz a potem opisz scenę.
+  Scena powinna być bardzo uproszczona, zawierać tylko głównego bohatera i jego otoczenie.
+  Scena powinna nawiązywać do początku historii i nie zdradzać zakończenia.
+  Unikaj nazw i imion - istotny jest tylko wygląd potrzebny do wygenerowania obrazu.
+  Zacznij od "Generate a cover image for a fantasy story in style of a book illustration."
 `;
-
-const IMAGE_GEN_SYSTEM_PROMPT =
-  "Generate a cover image for a fantasy story in style of a book illustration.";
 
 const TITLE_GEN_PROMPT = `
   Jesteś generatorem tytułów do opowiadań.
@@ -99,6 +103,8 @@ Deno.serve(async (req) => {
     if (!user) throw new Error("User not found");
 
     const { userInput } = (await req.json()) as RequestPayload;
+
+    console.log("creating a story...", { userInput });
 
     const { storyText, storySystemPrompt } = await generateStoryText(userInput);
 
@@ -194,12 +200,10 @@ async function refineStoryText(
 async function generateStoryText(
   userInput: string,
 ): Promise<{ storyText: string; storySystemPrompt: string }> {
-  const storySystemPrompt = [
-    SYSTEM_PROMPT_BASE,
-    getRandomArrayElement(SYSTEM_ENDING_PROMPTS),
-  ].join("\n");
+  const endingPrompt = getRandomArrayElement(SYSTEM_ENDING_PROMPTS);
+  const storySystemPrompt = [SYSTEM_PROMPT_BASE, endingPrompt].join("\n");
 
-  console.log("generating story text...");
+  console.log("generating story text...", { endingPrompt });
   const storyCompletion = await openAi.chat.completions.create({
     model: "gpt-4o",
     store: false,
@@ -241,8 +245,8 @@ async function generateImagePrompt(storyText: string): Promise<string> {
     throw new Error("Failed to generate the image prompt");
   }
 
-  console.log("Image prompt generated successfully");
-  return [IMAGE_GEN_SYSTEM_PROMPT, dynamicImagePrompt].join("\n");
+  console.log("Image prompt generated successfully:", dynamicImagePrompt);
+  return dynamicImagePrompt;
 }
 
 async function generateImage(imagePrompt: string): Promise<string> {
@@ -251,15 +255,17 @@ async function generateImage(imagePrompt: string): Promise<string> {
   const generateDesiredImage = async () => {
     const result = await runware.requestImages({
       positivePrompt: imagePrompt,
-      model: "runware:5@1",
-      width: 640,
-      height: 640,
+      negativePrompt: "avoid text",
+      model: "civitai:133005@357609",
+      width: 1024,
+      height: 1024,
       numberResults: 1,
       outputFormat: "WEBP",
-      steps: 28,
-      CFGScale: 4,
+      steps: 40,
+      CFGScale: 6,
       scheduler: "Default",
       strength: 0.8,
+      lora: [],
     });
 
     const imageUrl = result?.[0]?.imageURL;
@@ -344,6 +350,10 @@ const generateNarration = async (
   storyTitle: string,
   storyText: string,
 ): Promise<Blob> => {
+  if (!NARRATION_ENABLED()) {
+    throw new Error("Narration generation is disabled");
+  }
+
   console.log("generating narration...");
 
   const elevenLabsApiKey = Deno.env.get("ELEVENLABS_API_KEY");
