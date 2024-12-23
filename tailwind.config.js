@@ -29,6 +29,18 @@ export default {
           dark: '#706c55',
         },
       },
+      keyframes: {
+        shake: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '20%': { transform: 'rotate(-10deg)' },
+          '40%': { transform: 'rotate(10deg)' },
+          '60%': { transform: 'rotate(-10deg)' },
+          '80%': { transform: 'rotate(10deg)' },
+        },
+      },
+      animation: {
+        shake: 'shake 0.8s ease-in-out',
+      },
     },
   },
   plugins: [],
