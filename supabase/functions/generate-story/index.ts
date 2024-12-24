@@ -56,7 +56,10 @@ const IMAGE_PROMPT_GEN_PROMPT = `
   - opis tonu i kolorów obrazu
   - poziom realizmu
   - opis otoczenia
-  - opis wyglądu i pozycji bohatera (dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera, zaznacz czym jest bohater - człowiek? kot? coś innego?)
+  - opis wyglądu i pozycji bohatera:
+    - dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera
+    - zaznacz czym jest bohater (człowiek? kot? inna postać?)
+    - jeżeli w historii od początku jest dwóch bohaterów - człowiek i kot, możesz zawrzeć opis obydwu postaci zmaiast tylko jednej
 `;
 
 const TITLE_GEN_PROMPT = `
