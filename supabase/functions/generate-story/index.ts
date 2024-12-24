@@ -56,7 +56,7 @@ const IMAGE_PROMPT_GEN_PROMPT = `
   - opis tonu i kolorów obrazu
   - poziom realizmu
   - opis otoczenia
-  - opis wyglądu i pozycji bohatera (dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera)
+  - opis wyglądu i pozycji bohatera (dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera, zaznacz czym jest bohater - człowiek? kot? coś innego?)
 `;
 
 const TITLE_GEN_PROMPT = `
