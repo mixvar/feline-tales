@@ -3,7 +3,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { STORY_BY_ID_QUERY_KEY } from "../lib/query-keys.ts";
 
-export const useStoryGeneration = () => {
+interface Options {
+  enableNarrationGeneration: boolean;
+}
+
+export const useStoryGeneration = ({ enableNarrationGeneration }: Options) => {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +20,12 @@ export const useStoryGeneration = () => {
 
       const resp = await supabase.functions.invoke<{ storyId: string }>(
         "generate-story",
-        { body: { userInput } },
+        {
+          body: {
+            userInput,
+            narrationEnabled: enableNarrationGeneration,
+          },
+        },
       );
 
       if (!resp.data) {

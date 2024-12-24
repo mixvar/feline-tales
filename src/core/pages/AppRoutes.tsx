@@ -20,6 +20,8 @@ import { StoryHistory } from './StoryHistory.tsx';
 export const AppRoutes = ({ user }: { user: User }) => {
   const { pathname } = useLocation();
 
+  const [enableNarrationGeneration, setEnableNarrationGeneration] = useState(true);
+
   const [isLoadingNewStory, setIsLoadingNewStory] = useState(false);
   useEffect(() => {
     setIsLoadingNewStory(false);
@@ -29,13 +31,20 @@ export const AppRoutes = ({ user }: { user: User }) => {
 
   return (
     <>
-      <UserWidget user={user} />
+      <UserWidget
+        user={user}
+        enableNarrationGeneration={enableNarrationGeneration}
+        onEnableNarrationGenerationChange={setEnableNarrationGeneration}
+      />
       <AppLayout showSmallLayout={showSmallLayout}>
         <Routes>
           <Route
             path="/"
             element={
-              <NewStoryRoute onLoadingStateChange={(loading) => setIsLoadingNewStory(loading)} />
+              <NewStoryRoute
+                onLoadingStateChange={(loading) => setIsLoadingNewStory(loading)}
+                enableNarrationGeneration={enableNarrationGeneration}
+              />
             }
           />
           <Route path="/history" element={<HistoryRoute />} />
@@ -65,11 +74,13 @@ const AppLayout = ({
 
 const NewStoryRoute = ({
   onLoadingStateChange,
+  enableNarrationGeneration,
 }: {
   onLoadingStateChange: (loading: boolean) => void;
+  enableNarrationGeneration: boolean;
 }) => {
   const navigate = useNavigate();
-  const storyGen = useStoryGeneration();
+  const storyGen = useStoryGeneration({ enableNarrationGeneration });
 
   useEffect(() => {
     onLoadingStateChange(storyGen.isLoading);

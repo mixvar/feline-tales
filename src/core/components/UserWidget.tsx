@@ -1,11 +1,22 @@
 import md5 from 'md5';
 import { useCallback, useRef, useState } from 'react';
 
+import { Toggle } from './base/Toggle';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 
-export const UserWidget = ({ user }: { user: User }) => {
+interface UserWidgetProps {
+  user: User;
+  enableNarrationGeneration: boolean;
+  onEnableNarrationGenerationChange: (value: boolean) => void;
+}
+
+export const UserWidget = ({
+  user,
+  enableNarrationGeneration,
+  onEnableNarrationGenerationChange,
+}: UserWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,13 +44,20 @@ export const UserWidget = ({ user }: { user: User }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 border border-gray-200">
+        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-1 border border-gray-200">
           <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200 truncate">
             {user.email}
           </div>
+          <div className="px-4 py-2 border-b border-gray-200">
+            <Toggle
+              checked={enableNarrationGeneration}
+              onChange={onEnableNarrationGenerationChange}
+              label="Generuj narrację"
+            />
+          </div>
           <button
             onClick={() => void handleSignOut()}
-            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors"
           >
             Wyloguj
           </button>

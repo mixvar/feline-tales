@@ -15,8 +15,6 @@ console.log(
   "generate-story function is running",
 );
 
-const NARRATION_ENABLED = () => true;
-
 const DESIRED_IMAGE_TIMEOUT_MS = 30_000;
 
 const SYSTEM_PROMPT_BASE = `
@@ -62,13 +60,14 @@ const TITLE_GEN_PROMPT = `
   Wygeneruj krótki, chwytliwy tytuł do przedstawionej historii.
   Tytuł powinien być po polsku, max 6 słów.
   Tytuł powinien być intrygujący i nawiązywać do głównego wątku lub bohatera historii.
-  Unikaj słów "kot" ani "kotek" w tytule.
+  Unikaj słów "kot" i "kotek" w tytule.
   Nie dodawaj kropki na końcu tytułu.
   Ważna jest poprawność gramatyczna.
 `;
 
 type RequestPayload = {
   userInput: string;
+  narrationEnabled: boolean;
 };
 
 type ResponsePayload = {
@@ -104,18 +103,15 @@ Deno.serve(async (req) => {
     const user = await getSupabaseUser(supabase, req);
     if (!user) throw new Error("User not found");
 
-    const { userInput } = (await req.json()) as RequestPayload;
+    const { userInput, narrationEnabled } =
+      (await req.json()) as RequestPayload;
 
     console.log("creating a story...", { userInput });
 
     const { storyText, storySystemPrompt } = await generateStoryText(userInput);
 
-    // run whatever is possible in parallel
-    const [
-      { imagePrompt, imageRef },
-      { storyTitle, refinedStoryText, narrationRef },
-    ] = await Promise.all([
-      generateImagePrompt(storyText)
+    const createImage = (text: string) =>
+      generateImagePrompt(text)
         .then(async (imagePrompt) => ({
           imagePrompt,
           imageRef: await generateImage(imagePrompt)
@@ -124,7 +120,31 @@ Deno.serve(async (req) => {
               console.error("Failed to create cover image", error.message);
               return null;
             }),
-        })),
+        }));
+
+    const createNarration = (
+      title: string,
+      text: string,
+    ): Promise<string | null> => {
+      if (!narrationEnabled) {
+        console.log("narration generation is disabled");
+        return Promise.resolve(null);
+      }
+
+      return generateNarration(title, text)
+        .then((file) => uploadNarrationToStorage(supabase, user.id, file))
+        .catch((error) => {
+          console.error("Failed to create narration", error.message);
+          return null;
+        });
+    };
+
+    // run whatever is possible in parallel
+    const [
+      { imagePrompt, imageRef },
+      { storyTitle, refinedStoryText, narrationRef },
+    ] = await Promise.all([
+      createImage(storyText),
 
       Promise.all([
         generateTitle(storyText),
@@ -132,12 +152,7 @@ Deno.serve(async (req) => {
       ]).then(async ([storyTitle, refinedStoryText]) => ({
         storyTitle,
         refinedStoryText,
-        narrationRef: await generateNarration(storyTitle, refinedStoryText)
-          .then((file) => uploadNarrationToStorage(supabase, user.id, file))
-          .catch((error) => {
-            console.error("Failed to create narration", error.message);
-            return null;
-          }),
+        narrationRef: await createNarration(storyTitle, refinedStoryText),
       })),
     ]);
 
@@ -180,7 +195,7 @@ async function refineStoryText(
     model: "gpt-4o",
     store: false,
     stream: false,
-    temperature: 1,
+    temperature: 0.4,
     messages: [
       { role: "developer", content: storySystemPrompt },
       { role: "user", content: userInput },
@@ -195,7 +210,10 @@ async function refineStoryText(
     throw new Error("Failed to generate the refined story");
   }
 
-  console.log("Story text refined successfully");
+  console.log("Story text refined successfully", {
+    before: storyText,
+    after: refinedStoryText,
+  });
   return refinedStoryText;
 }
 
@@ -210,7 +228,7 @@ async function generateStoryText(
     model: "gpt-4o",
     store: false,
     stream: false,
-    temperature: 1,
+    temperature: 0.9,
     messages: [
       { role: "developer", content: storySystemPrompt },
       { role: "user", content: userInput },
@@ -233,22 +251,22 @@ async function generateImagePrompt(storyText: string): Promise<string> {
     model: "gpt-4o",
     store: false,
     stream: false,
-    temperature: 0.7,
+    temperature: 0.6,
     messages: [
       { role: "system", content: IMAGE_PROMPT_GEN_PROMPT },
       { role: "user", content: storyText },
     ],
   });
 
-  const dynamicImagePrompt = imagePromptCompletion.choices[0].message.content
+  const imagePrompt = imagePromptCompletion.choices[0].message.content
     ?.trim();
 
-  if (!dynamicImagePrompt) {
+  if (!imagePrompt) {
     throw new Error("Failed to generate the image prompt");
   }
 
-  console.log("Image prompt generated successfully:", dynamicImagePrompt);
-  return dynamicImagePrompt;
+  console.log("Image prompt generated successfully", { imagePrompt });
+  return imagePrompt;
 }
 
 async function generateImage(imagePrompt: string): Promise<string> {
@@ -331,7 +349,7 @@ async function generateTitle(storyText: string): Promise<string> {
     model: "gpt-4o",
     store: false,
     stream: false,
-    temperature: 1.1,
+    temperature: 0.75,
     messages: [
       { role: "system", content: TITLE_GEN_PROMPT },
       { role: "user", content: storyText },
@@ -352,10 +370,6 @@ const generateNarration = async (
   storyTitle: string,
   storyText: string,
 ): Promise<Blob> => {
-  if (!NARRATION_ENABLED()) {
-    throw new Error("Narration generation is disabled");
-  }
-
   console.log("generating narration...");
 
   const elevenLabsApiKey = Deno.env.get("ELEVENLABS_API_KEY");
