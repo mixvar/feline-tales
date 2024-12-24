@@ -4,7 +4,9 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { contentTypeHeaders, corsHeaders } from "../_shared/headers.ts";
 import {
   getSupabaseClient,
+  getSupabaseServiceClient,
   getSupabaseUser,
+  getUserRole,
   StoryEntity,
   SupabaseClient,
 } from "../_shared/supabase.ts";
@@ -102,9 +104,24 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = getSupabaseClient(req);
+    const supabaseAdmin = getSupabaseServiceClient();
 
     const user = await getSupabaseUser(supabase, req);
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      return new Response(
+        JSON.stringify({ result: "Unathenticated" }),
+        { headers: { ...corsHeaders }, status: 401 },
+      );
+    }
+
+    const userRole = await getUserRole(supabaseAdmin, user);
+    if (userRole === "none") {
+      console.log(`access denied for '${user.email}'`);
+      return new Response(
+        JSON.stringify({ result: "Access denied" }),
+        { headers: { ...corsHeaders }, status: 403 },
+      );
+    }
 
     const { userInput, narrationEnabled } =
       (await req.json()) as RequestPayload;
@@ -180,10 +197,8 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Error processing request:", error);
     return new Response(
-      JSON.stringify({
-        result: "An error occurred while generating the story.",
-      }),
-      { headers: { ...contentTypeHeaders.json, ...corsHeaders }, status: 500 },
+      "An error occurred while generating the story.",
+      { headers: { ...corsHeaders }, status: 500 },
     );
   }
 });
@@ -352,7 +367,7 @@ async function generateTitle(storyText: string): Promise<string> {
     model: "gpt-4o",
     store: false,
     stream: false,
-    temperature: 0.75,
+    temperature: 0.8,
     messages: [
       { role: "system", content: TITLE_GEN_PROMPT },
       { role: "user", content: storyText },

@@ -69,6 +69,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_roles: {
+        Row: {
+          id: number;
+          user_email: string;
+          user_role: string;
+        };
+        Insert: {
+          id?: number;
+          user_email: string;
+          user_role: string;
+        };
+        Update: {
+          id?: number;
+          user_email?: string;
+          user_role?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: Record<never, never>;

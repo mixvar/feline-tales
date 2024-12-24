@@ -15,6 +15,13 @@ export const getSupabaseClient = (req: Request) => {
   );
 };
 
+export const getSupabaseServiceClient = () => {
+  return createClient<Database>(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+};
+
 export const getSupabaseUser = async (
   supabase: SupabaseClient,
   req: Request,
@@ -23,6 +30,23 @@ export const getSupabaseUser = async (
   const token = authHeader.replace("Bearer ", "");
   const { data } = await supabase.auth.getUser(token);
   return data.user;
+};
+
+// TODO: probably a DB enum would be better for this
+export type UserRole = "super-user" | "none";
+
+export const getUserRole = async (
+  supabaseAdmin: SupabaseClient,
+  user: User,
+): Promise<UserRole> => {
+  if (!user.email) {
+    return "none";
+  }
+
+  const { data } = await supabaseAdmin.from("user_roles").select("user_role")
+    .eq("user_email", user.email).single();
+
+  return (data?.user_role ?? "none") as UserRole;
 };
 
 export type SupabaseClient = ReturnType<typeof getSupabaseClient>;
