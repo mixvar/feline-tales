@@ -35,7 +35,7 @@ const SYSTEM_ENDING_PROMPTS = [
   "Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.",
   "Historia ma mieć zakończenie otwarte do interpretacji przez słuchacza, bez jasnej odpowiedzi co się stało. Nie powinna zawierać typowego dla bajek morału. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata",
   "Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
-  "Zawrzyj motyw walki dobra ze złem. Stwórz czarny charatker z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater na końcu zostaje pokonany ale istnieje groźba że powróci. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.",
+  "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charatker z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater na końcu zostaje z trudnością pokonany ale istnieje groźba że powróci. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.",
   "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla jednego z kochanków.",
 ];
 
@@ -51,15 +51,11 @@ const IMAGE_PROMPT_GEN_PROMPT = `
   Generator obrazów nie rozumie złożonych zdań, ważne jest przekazanie opisu używając jak najmniejszej ilości słów.
   Chcemy przedstawić scenę z głównym bohaterem (bez dodatkowych postaci) z początku opowiadania, bez zdradzania zakończenia.
   Unikaj nazw i imion - istotny jest tylko wygląd potrzebny do wygenerowania obrazu.
-  Zacznij od "Generate a cover image for a fantasy story in style of a book illustration."
+  Zacznij od "Generate a semi-realistic cover image for a story. Style of a book illustration."
   Opis ma skłdać się z 4 krótkich zdań.
   - opis tonu i kolorów obrazu
-  - poziom realizmu
   - opis otoczenia
-  - opis wyglądu i pozycji bohatera:
-    - dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera
-    - zaznacz czym jest bohater (człowiek? kot? inna postać?)
-    - jeżeli w historii od początku jest dwóch bohaterów - człowiek i kot, możesz zawrzeć opis obydwu postaci zmaiast tylko jednej
+  - opis wyglądu i pozycji bohatera (dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera, zaznacz czym jest bohater - człowiek? kot? coś innego?)
 `;
 
 const TITLE_GEN_PROMPT = `
