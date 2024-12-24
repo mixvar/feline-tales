@@ -47,12 +47,16 @@ const SYSTEM_STORY_REFINMENT_PROMPT = `
 
 const IMAGE_PROMPT_GEN_PROMPT = `
   Jesteś generatorem opisów obrazów do przedstawionych historii.
-  Wygeneruj opis po angielsku, max 50 słów.
-  Opisz krótko w jakim tonie ma być obraz a potem opisz scenę.
-  Scena powinna być bardzo uproszczona, zawierać tylko głównego bohatera i jego otoczenie.
-  Scena powinna nawiązywać do początku historii i nie zdradzać zakończenia.
+  Wygeneruj opis po angielsku, max 30 słów.
+  Generator obrazów nie rozumie złożonych zdań, ważne jest przekazanie opisu używając jak najmniejszej ilości słów.
+  Chcemy przedstawić scenę z głównym bohaterem (bez dodatkowych postaci) z początku opowiadania, bez zdradzania zakończenia.
   Unikaj nazw i imion - istotny jest tylko wygląd potrzebny do wygenerowania obrazu.
   Zacznij od "Generate a cover image for a fantasy story in style of a book illustration."
+  Opis ma skłdać się z 4 krótkich zdań.
+  - opis tonu i kolorów obrazu
+  - poziom realizmu
+  - opis otoczenia
+  - opis wyglądu i pozycji bohatera (dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera)
 `;
 
 const TITLE_GEN_PROMPT = `
@@ -275,14 +279,14 @@ async function generateImage(imagePrompt: string): Promise<string> {
   const generateDesiredImage = async () => {
     const result = await runware.requestImages({
       positivePrompt: imagePrompt,
-      negativePrompt: "avoid text",
+      negativePrompt: "multiple characters, text",
       model: "civitai:133005@357609",
       width: 1024,
       height: 1024,
       numberResults: 1,
       outputFormat: "WEBP",
-      steps: 40,
-      CFGScale: 6,
+      steps: 35,
+      CFGScale: 7.5,
       scheduler: "Default",
       strength: 0.8,
       lora: [],
