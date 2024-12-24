@@ -44,7 +44,7 @@ export const UserWidget = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-1 border border-gray-200">
+        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-1 border border-gray-200 z-50">
           <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200 truncate">
             {user.email}
           </div>

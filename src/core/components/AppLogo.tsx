@@ -45,7 +45,7 @@ export const AppLogo = ({ showSmallLayout }: { showSmallLayout: boolean }) => {
       />
       <h1
         className={clsx(
-          'text-felineGreen-dark font-cursive text-gradient-animation transition-all duration-300 z-10',
+          'text-felineGreen-dark font-cursive text-gradient-animation transition-all duration-300 z-[1]',
           showSmallLayout ? 'text-5xl md:text-6xl' : 'text-5xl md:text-[6rem]'
         )}
       >
