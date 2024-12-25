@@ -5,9 +5,12 @@ import { STORY_BY_ID_QUERY_KEY } from "../lib/query-keys.ts";
 
 interface Options {
   enableNarrationGeneration: boolean;
+  enableRandomEnding: boolean;
 }
 
-export const useStoryGeneration = ({ enableNarrationGeneration }: Options) => {
+export const useStoryGeneration = (
+  { enableNarrationGeneration, enableRandomEnding }: Options,
+) => {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +27,7 @@ export const useStoryGeneration = ({ enableNarrationGeneration }: Options) => {
           body: {
             userInput,
             narrationEnabled: enableNarrationGeneration,
+            randomEndingEnabled: enableRandomEnding,
           },
         },
       );

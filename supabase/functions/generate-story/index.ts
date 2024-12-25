@@ -26,7 +26,7 @@ const SYSTEM_PROMPT_BASE = `
   Wejście użytkownika powinno nadać temat historii, może mieć wpływ na fabułę, bohaterów i świat.
   Historia musi zawierać koci motyw, np kociego bohatera lub koci świat.
   Opowiadanie powinno zawierać od 100 do 200 słów.
-  Unikaj utartych motywów. Unikaj oklepanych kocich imion jak Luna czy Feliks.
+  Unikaj utartych motywów. Użyj finezyjnych i niestandardowych imion, chyba że historia wymaga inaczej.
 `;
 
 const SYSTEM_ENDING_PROMPTS = [
@@ -34,11 +34,21 @@ const SYSTEM_ENDING_PROMPTS = [
   "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym. Dodatkowo podkręć motyw kociego świata - wszyscy bohaterowie i cały świat jest koci.",
   "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera. Opowiadanie nie powinno być dziecinne, świat i bohaterowie powini być bardziej realistyczni niż w bajkach dla dzieci i nieco mroczni. Nadal jest to opowiadanie w fantastycznym świecie, tylko dla starszych odbiorców.",
   "Historia ma być wyjątkowo słodka i pozytywna. Bohater zdobywa wszystko czego chce i jest szczęśliwy. Nie ma żadnego morału ani zwrotu akcji.",
+  "Protagonista to anty-bohater, który zdobywa wszystko czego chce, ale cierpią na tym inni. Zarysuj konsekwencje jego akcji. Brak szczęśliwego zakończenia. Brak morału. Dla starszych odbiorców.",
+  "Bohater dostaje bolesną nauczkę że to czego się pragnie często nie jest tym czego się naprawdę potrzebuje",
+  "Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.",
   "Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.",
   "Historia ma mieć zakończenie otwarte do interpretacji przez słuchacza, bez jasnej odpowiedzi co się stało. Nie powinna zawierać typowego dla bajek morału. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata",
   "Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
-  "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charatker z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater na końcu zostaje z trudnością pokonany ale istnieje groźba że powróci. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.",
+  "Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
+  "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater na końcu zostaje z trudnością pokonany ale istnieje groźba że powróci. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.",
+  "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater zostaje pokonany, ale ginie też protagonista. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.",
+  "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Protagonista zwycięża ale okazuje się że zły bohater był kierowany wyższym dobrem i teraz sytuacja jest jeszcze gorsza. Możesz przekroczyć limit słów o 50 żeby lepiej zakończenie.",
   "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla jednego z kochanków.",
+  "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla obu kochanków. (wyjaśnij w jaki sposób)",
+  "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Miłość zwycięża ale kochankowie wiele tracą. (wyjaśnij w jaki sposób)",
+  "Inspiruj się biblijnymi przypowieściami, historia ma nauczyć czegoś ważnego słuchaczy.",
+  "Stórz przerażającą historię jak z horroru. Historia dla dorosłych. Przynajmniej jeden bohater ginie albo traci rozum.",
 ];
 
 const SYSTEM_STORY_REFINMENT_PROMPT = `
@@ -69,7 +79,8 @@ const IMAGE_PROMPT_GEN_PROMPT = `
     - if the hero is human, specify the gender
     - Avoid names and first names
     - mention hero's cloths if that is relevant for the setting
-    - prefix the hero description with 'single'
+    - if it is a love story, include both lovers
+    - otherwise prefix the hero description with 'single'
 
   As for the scene and environment:
     - prefer outside setting if it makes sense for the story
@@ -94,7 +105,8 @@ const TITLE_GEN_PROMPT = `
 
 type RequestPayload = {
   userInput: string;
-  narrationEnabled: boolean;
+  narrationEnabled?: boolean;
+  randomEndingEnabled?: boolean;
 };
 
 type ResponsePayload = {
@@ -145,12 +157,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { userInput, narrationEnabled } =
-      (await req.json()) as RequestPayload;
+    const {
+      userInput,
+      narrationEnabled = true,
+      randomEndingEnabled = true,
+    } = (await req.json()) as RequestPayload;
 
     console.log("creating a story...", { userInput });
 
-    const { storyText, storySystemPrompt } = await generateStoryText(userInput);
+    const { storyText, storySystemPrompt } = await generateStoryText(
+      userInput,
+      { randomEndingEnabled },
+    );
 
     const createImage = (text: string) =>
       generateImagePrompt(text)
@@ -259,8 +277,12 @@ async function refineStoryText(
 
 async function generateStoryText(
   userInput: string,
+  { randomEndingEnabled }: { randomEndingEnabled: boolean },
 ): Promise<{ storyText: string; storySystemPrompt: string }> {
-  const endingPrompt = getRandomArrayElement(SYSTEM_ENDING_PROMPTS);
+  const endingPrompt = randomEndingEnabled
+    ? getRandomArrayElement(SYSTEM_ENDING_PROMPTS)
+    : "Stwórz historię z tonem i zakończeniem adekwatnym dla wejścia użytkownika. Koci motyw jest mniej istotny, chyba że użytkwnik sobie tego zarzyczył.";
+
   const storySystemPrompt = [SYSTEM_PROMPT_BASE, endingPrompt].join("\n");
 
   console.log("generating story text...", { endingPrompt });

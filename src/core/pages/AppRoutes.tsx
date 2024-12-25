@@ -21,6 +21,7 @@ export const AppRoutes = ({ user }: { user: User }) => {
   const { pathname } = useLocation();
 
   const [enableNarrationGeneration, setEnableNarrationGeneration] = useState(true);
+  const [enableRandomEnding, setEnableRandomEnding] = useState(true);
 
   const [isLoadingNewStory, setIsLoadingNewStory] = useState(false);
   useEffect(() => {
@@ -35,6 +36,8 @@ export const AppRoutes = ({ user }: { user: User }) => {
         user={user}
         enableNarrationGeneration={enableNarrationGeneration}
         onEnableNarrationGenerationChange={setEnableNarrationGeneration}
+        enableRandomEnding={enableRandomEnding}
+        onEnableRandomEndingChange={setEnableRandomEnding}
       />
       <AppLayout showSmallLayout={showSmallLayout}>
         <Routes>
@@ -44,6 +47,7 @@ export const AppRoutes = ({ user }: { user: User }) => {
               <NewStoryRoute
                 onLoadingStateChange={(loading) => setIsLoadingNewStory(loading)}
                 enableNarrationGeneration={enableNarrationGeneration}
+                enableRandomEnding={enableRandomEnding}
               />
             }
           />
@@ -75,12 +79,17 @@ const AppLayout = ({
 const NewStoryRoute = ({
   onLoadingStateChange,
   enableNarrationGeneration,
+  enableRandomEnding,
 }: {
   onLoadingStateChange: (loading: boolean) => void;
   enableNarrationGeneration: boolean;
+  enableRandomEnding: boolean;
 }) => {
   const navigate = useNavigate();
-  const storyGen = useStoryGeneration({ enableNarrationGeneration });
+  const storyGen = useStoryGeneration({
+    enableNarrationGeneration,
+    enableRandomEnding,
+  });
 
   useEffect(() => {
     onLoadingStateChange(storyGen.isLoading);

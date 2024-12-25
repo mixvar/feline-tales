@@ -10,12 +10,16 @@ interface UserWidgetProps {
   user: User;
   enableNarrationGeneration: boolean;
   onEnableNarrationGenerationChange: (value: boolean) => void;
+  enableRandomEnding: boolean;
+  onEnableRandomEndingChange: (value: boolean) => void;
 }
 
 export const UserWidget = ({
   user,
   enableNarrationGeneration,
   onEnableNarrationGenerationChange,
+  enableRandomEnding,
+  onEnableRandomEndingChange,
 }: UserWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,6 +57,13 @@ export const UserWidget = ({
               checked={enableNarrationGeneration}
               onChange={onEnableNarrationGenerationChange}
               label="Generuj narrację"
+            />
+          </div>
+          <div className="px-4 py-2 border-b border-gray-200">
+            <Toggle
+              checked={enableRandomEnding}
+              onChange={onEnableRandomEndingChange}
+              label="Losuj zakończenie"
             />
           </div>
           <button
