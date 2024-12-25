@@ -58,11 +58,13 @@ const SYSTEM_STORY_REFINMENT_PROMPT = `
 `;
 
 const IMAGE_GEN_MODEL_DECISION_PROMPT = `
-  Your role is to receive an image description and to assign it to image generation model. The output should contain just the model name.
+  Your role is to receive an image description and to assign it to image generation model. 
+  The output should contain just the model name. 
+  To determine the model, count all the actors present in the image description (Actor - a human or animal present in the scene, the main character or just element of the background)
 
   models:
-  jugg - default, use it if the scene contains only 1 character (animals in the scene also count as characters). it handles abstract and futuristic scenes well.
-  flux - use if there is more than 1 character, or if the character is half-human half cat, or if there is a complex interior in realistic setting
+  jugg - default, use it if the scene contains only 1 Actor. it handles abstract and futuristic scenes well.
+  flux - ALWAYS USE IF THERE IS MORE THAN 1 Actor! Use also if the character is half-human half cat, or if there is a complex interior in realistic setting
 `;
 
 const IMAGE_PROMPT_GEN_PROMPT = `
