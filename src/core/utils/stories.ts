@@ -4,6 +4,7 @@ import { StoryEntity } from "../lib/supabase";
 export interface StoryObject {
   id: string;
   title: string;
+  subTitle?: string;
   text: string;
   createdAt: string;
   imageUrl?: string;
@@ -24,11 +25,17 @@ export const createStoryObject = async (
     options.excludeNarration ? null : story.content_audio_file_ref,
   );
 
+  const subTitle = story.user_input_transcript?.replace(
+    "Opowiedz mi historię o",
+    "Opowieść o",
+  );
+
   return {
     id: story.id,
     title: story.title,
     text: story.content,
     createdAt: story.created_at,
+    subTitle,
     imageUrl,
     narrationAudioUrl,
   };
