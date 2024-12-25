@@ -26,7 +26,7 @@ const SYSTEM_PROMPT_BASE = `
   Wejście użytkownika powinno nadać temat historii, może mieć wpływ na fabułę, bohaterów i świat.
   Historia musi zawierać koci motyw, np kociego bohatera lub koci świat.
   Opowiadanie powinno zawierać od 100 do 200 słów.
-  Unikaj utartych motywów.
+  Unikaj utartych motywów. Unikaj oklepanych kocich imion jak Luna czy Feliks.
 `;
 
 const SYSTEM_ENDING_PROMPTS = [
@@ -47,17 +47,39 @@ const SYSTEM_STORY_REFINMENT_PROMPT = `
   Jeżeli tekst zawiera błędy gramatyczne albo nieistniejące słowa, popraw je.
 `;
 
+const IMAGE_GEN_MODEL_DECISION_PROMPT = `
+  Your role is to receive an image description and to assign it to image generation model. The output should contain just the model name.
+
+  models:
+  jugg - default, use it if the scene contains only 1 character (animals in the scene also count as characters). it handles abstract and futuristic scenes well.
+  flux - use if there is more than 1 character, or if the character is half-human half cat, or if there is a complex interior in realistic setting
+`;
+
 const IMAGE_PROMPT_GEN_PROMPT = `
-  Jesteś generatorem opisów obrazów do przedstawionych historii.
-  Wygeneruj opis po angielsku, max 30 słów.
-  Generator obrazów nie rozumie złożonych zdań, ważne jest przekazanie opisu używając jak najmniejszej ilości słów.
-  Chcemy przedstawić scenę z głównym bohaterem (bez dodatkowych postaci) z początku opowiadania, bez zdradzania zakończenia.
-  Unikaj nazw i imion - istotny jest tylko wygląd potrzebny do wygenerowania obrazu.
-  Zacznij od "Generate a semi-realistic cover image for a story. Style of a book illustration."
-  Opis ma skłdać się z 4 krótkich zdań.
-  - opis tonu i kolorów obrazu
-  - opis otoczenia
-  - opis wyglądu i pozycji bohatera (dodaj słowo 'solo' aby AI nie wygenerowała kilku kopii bohatera, zaznacz czym jest bohater - człowiek? kot? coś innego?)
+  You are a description generator for illustrations for user stories.
+  Generate a description in English, max 50 words.
+  We want to present a scene with the main character from the beginning of the story, without giving away the ending.
+  Start with “Semi-realistic story illustration.” then include:
+    - description of the emotion and colors of the picture
+    - description of the hero's appearance and position
+    - description of the environment
+  
+  As for the hero:
+    - indicate what the hero is (human? cat? something else?)
+    - if the hero is human, specify the gender
+    - Avoid names and first names
+    - mention hero's cloths if that is relevant for the setting
+    - prefix the hero description with 'single'
+
+  As for the scene and environment:
+    - prefer outside setting if it makes sense for the story
+    - look for a simple composition
+    - avoid a lot of details
+    - Avoid names and first names
+    - give the characteristics of the place
+    - specify spatial relation of the hero to the environment
+    - if the hero is inside some building or vehicle, focus on it's interior
+
 `;
 
 const TITLE_GEN_PROMPT = `
@@ -288,29 +310,86 @@ async function generateImagePrompt(storyText: string): Promise<string> {
 }
 
 async function generateImage(imagePrompt: string): Promise<string> {
-  console.log("generating images...");
+  const chooseImageModel = async (): Promise<"jugg" | "flux"> => {
+    console.log("choosing image model...");
+    const model = await openAi.chat.completions.create({
+      model: "gpt-4o",
+      store: false,
+      stream: false,
+      temperature: 0.4,
+      messages: [
+        { role: "system", content: IMAGE_GEN_MODEL_DECISION_PROMPT },
+        { role: "user", content: imagePrompt },
+      ],
+    });
 
-  const generateDesiredImage = async () => {
+    const result = model.choices[0].message.content?.trim();
+
+    if (result?.startsWith("jugg") || result?.startsWith("flux")) {
+      return result.startsWith("jugg") ? "jugg" : "flux";
+    }
+
+    throw new Error(
+      `Failed to choose the image model. Output: ${result}`,
+    );
+  };
+
+  /**
+   * Juggernaut XL from RunDiffusion model
+   * Can create very preety iamges, but struggles with multiple characters
+   */
+  const generateJuggImage = async () => {
+    console.log("generating image using Juggernaut XL from RunDiffusion...");
     const result = await runware.requestImages({
       positivePrompt: imagePrompt,
-      negativePrompt: "multiple characters, text",
+      negativePrompt: "multiple characters",
       model: "civitai:133005@357609",
       width: 1024,
       height: 1024,
       numberResults: 1,
       outputFormat: "WEBP",
-      steps: 35,
-      CFGScale: 7.5,
+      steps: 34,
+      CFGScale: 5,
       scheduler: "Default",
       strength: 0.8,
       lora: [],
     });
 
     const imageUrl = result?.[0]?.imageURL;
-    if (!imageUrl) throw new Error("Failed to generate the desired image");
+    if (!imageUrl) throw new Error("Failed to generate jugg image");
     return imageUrl;
   };
 
+  /**
+   * FLUX.1 (Dev) model
+   * Can handle complex prompts better, more cartoonish style
+   */
+  const generateFluxImage = async () => {
+    console.log("generating image using FLUX.1 (Dev)...");
+    const result = await runware.requestImages({
+      positivePrompt: imagePrompt,
+      negativePrompt: "text",
+      model: "runware:101@1",
+      width: 1024,
+      height: 1024,
+      numberResults: 1,
+      outputFormat: "WEBP",
+      steps: 36,
+      CFGScale: 3.5,
+      scheduler: "FlowMatchEulerDiscreteScheduler",
+      strength: 0.8,
+      lora: [],
+    });
+
+    const imageUrl = result?.[0]?.imageURL;
+    if (!imageUrl) throw new Error("Failed to generate flux image");
+    return imageUrl;
+  };
+
+  /**
+   * FLUX.1 (Schnell) model
+   * Fallback model for fast generation
+   */
   const generateFallbackImage = async () => {
     const result = await runware.requestImages({
       positivePrompt: imagePrompt,
@@ -326,33 +405,31 @@ async function generateImage(imagePrompt: string): Promise<string> {
     });
 
     const imageUrl = result?.[0]?.imageURL;
-    if (!imageUrl) throw new Error("Failed to generate the fallback image");
+    if (!imageUrl) throw new Error("Failed to generate fallback image");
     return imageUrl;
   };
 
-  // Start both requests immediately
-  const desiredImagePromise = generateDesiredImage().catch((error) => {
-    console.log("desired image generation failed:", error.message);
-    throw error;
-  });
   const fallbackImagePromise = generateFallbackImage();
 
   try {
-    // First, try to get the desired image within 10 seconds
-    const timeoutPromise = new Promise((_, reject) =>
+    const model = await chooseImageModel();
+
+    const desiredImagePromise = model === "jugg"
+      ? generateJuggImage()
+      : generateFluxImage();
+    const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(
         () => reject(new Error("Desired image timeout")),
         DESIRED_IMAGE_TIMEOUT_MS,
       )
     );
 
-    // Wait for either the desired image or timeout
     const imageUrl = await Promise.race([desiredImagePromise, timeoutPromise]);
     console.log("desired image generated successfully");
 
-    return imageUrl as string;
+    return imageUrl;
   } catch (error) {
-    console.log((error as Error)?.message);
+    console.warn((error as Error)?.message);
 
     const imageUrl = await fallbackImagePromise;
 
