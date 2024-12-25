@@ -63,7 +63,7 @@ export const UserWidget = ({
             <Toggle
               checked={enableRandomEnding}
               onChange={onEnableRandomEndingChange}
-              label="Losuj zakończenie"
+              label="Dodaj losowy element"
             />
           </div>
           <button
