@@ -3,11 +3,16 @@ import { useUserRole } from './hooks/useUserRole.ts';
 import { AppRoutes } from './pages/AppRoutes.tsx';
 import { LoginPage } from './pages/LoginPage';
 import { AccessDenied } from './pages/AccessDenied.tsx';
+import { Spinner } from './components/base/Spinner.tsx';
 
 export const App = () => {
-  const { session } = useAuth();
+  const auth = useAuth();
 
-  if (!session) {
+  if (auth.isLoading && !auth.session) {
+    return <Spinner />;
+  }
+
+  if (!auth.session) {
     return <LoginPage />;
   }
 
@@ -15,8 +20,8 @@ export const App = () => {
     <RestrictedAccess>
       <AppRoutes
         user={{
-          id: session.user.id,
-          email: session.user.email,
+          id: auth.session.user.id,
+          email: auth.session.user.email,
         }}
       />
     </RestrictedAccess>
@@ -27,8 +32,7 @@ const RestrictedAccess = ({ children }: { children: React.ReactNode }) => {
   const { data: userRole } = useUserRole();
 
   if (!userRole) {
-    // TODO: loading/error handling could be improved
-    return null;
+    return <Spinner />;
   }
 
   if (userRole === 'none') {

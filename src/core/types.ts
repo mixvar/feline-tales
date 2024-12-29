@@ -1,4 +1,4 @@
-import { Session } from '@supabase/supabase-js';
+import { Session } from "@supabase/supabase-js";
 
 export interface User {
   id: string;
@@ -10,5 +10,3 @@ export interface AuthState {
   isLoading: boolean;
   error: Error | null;
 }
-
-export type TestCat = unknown;
