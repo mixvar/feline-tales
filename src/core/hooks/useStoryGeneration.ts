@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { STORY_BY_ID_QUERY_KEY } from "../lib/query-keys.ts";
 
@@ -12,15 +12,13 @@ export const useStoryGeneration = (
   { enableNarrationGeneration, enableRandomEnding }: Options,
 ) => {
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [storyId, setStoryId] = useState<string | null>(null);
 
-  const generate = async (userInput: string): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const mutation = useMutation({
+    mutationKey: ["generate-story"],
+    retry: 1,
 
+    mutationFn: async (userInput: string) => {
       const resp = await supabase.functions.invoke<{ storyId: string }>(
         "generate-story",
         {
@@ -36,24 +34,28 @@ export const useStoryGeneration = (
         throw new Error("Nie udało się wygenerować historii");
       }
 
-      const newStoryId = resp.data.storyId;
+      return resp.data.storyId;
+    },
+
+    onSuccess: (newStoryId) => {
       setStoryId(newStoryId);
 
-      // Invalidate the query for the newly generated story - also refreshing the list
       void queryClient.invalidateQueries({
         queryKey: STORY_BY_ID_QUERY_KEY(newStoryId),
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Coś poszło nie tak");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
   const reset = () => {
     setStoryId(null);
-    setError(null);
+    mutation.reset();
   };
 
-  return { isLoading, error, storyId, generate, reset };
+  return {
+    isLoading: mutation.isPending,
+    error: mutation.error?.message ?? null,
+    generate: mutation.mutate,
+    storyId,
+    reset,
+  };
 };
