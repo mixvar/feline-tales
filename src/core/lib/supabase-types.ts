@@ -54,21 +54,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      test_cats: {
-        Row: {
-          id: number;
-          name: string;
-        };
-        Insert: {
-          id?: never;
-          name: string;
-        };
-        Update: {
-          id?: never;
-          name?: string;
-        };
-        Relationships: [];
-      };
       user_roles: {
         Row: {
           id: number;
@@ -183,7 +168,8 @@ export type CompositeTypes<
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database;
-  } ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]][
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]][
       "CompositeTypes"
     ]
     : never = never,
