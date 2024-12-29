@@ -85,6 +85,7 @@ const NewStoryRoute = ({
   enableNarrationGeneration: boolean;
   enableRandomEnding: boolean;
 }) => {
+  const [userInput, setUserInput] = useState('');
   const navigate = useNavigate();
   const storyGen = useStoryGeneration({
     enableNarrationGeneration,
@@ -111,6 +112,8 @@ const NewStoryRoute = ({
           onSubmit={(userInput) => void storyGen.generate(userInput)}
           error={storyGen.error}
           onHistoryClick={handleHistoryClick}
+          userInput={userInput}
+          onUserInputChange={setUserInput}
         />
       )}
     </>

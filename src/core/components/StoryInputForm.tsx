@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { PrimaryButton } from './base/PrimaryButton';
 import { SecondaryButton } from './base/SecondaryButton';
 
@@ -6,11 +5,17 @@ interface StoryInputFormProps {
   onSubmit: (input: string) => void;
   onHistoryClick: () => void;
   error: string | null;
+  userInput: string;
+  onUserInputChange: (value: string) => void;
 }
 
-export const StoryInputForm = ({ onSubmit, onHistoryClick, error }: StoryInputFormProps) => {
-  const [userInput, setUserInput] = useState('');
-
+export const StoryInputForm = ({
+  onSubmit,
+  onHistoryClick,
+  error,
+  userInput,
+  onUserInputChange,
+}: StoryInputFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim()) return;
@@ -25,7 +30,7 @@ export const StoryInputForm = ({ onSubmit, onHistoryClick, error }: StoryInputFo
         </div>
         <textarea
           value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
+          onChange={(e) => onUserInputChange(e.target.value)}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               handleSubmit(e);
