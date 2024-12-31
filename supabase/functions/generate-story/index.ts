@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
     const user = await getSupabaseUser(supabase, req);
     if (!user) {
       return new Response(
-        JSON.stringify({ result: "Unathenticated" }),
+        JSON.stringify({ result: "Unauthenticated" }),
         { headers: { ...corsHeaders }, status: 401 },
       );
     }

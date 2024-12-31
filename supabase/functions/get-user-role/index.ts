@@ -20,7 +20,15 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseAdmin = getSupabaseServiceClient();
+
     const user = await getSupabaseUser(supabaseAdmin, req);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ result: "Unauthenticated" }),
+        { headers: { ...corsHeaders }, status: 401 },
+      );
+    }
+
     const userRole = await getUserRole(supabaseAdmin, user);
 
     const response: ResponsePayload = {

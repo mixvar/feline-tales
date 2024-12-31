@@ -74,8 +74,8 @@ devDependencies:
     specifier: ^3.4.2
     version: 3.4.2
   supabase:
-    specifier: ^2.1.1
-    version: 2.1.1
+    specifier: ^2.2.1
+    version: 2.2.1
   tailwindcss:
     specifier: ^3.4.17
     version: 3.4.17
@@ -3236,8 +3236,8 @@ packages:
       ts-interface-checker: 0.1.13
     dev: true
 
-  /supabase@2.1.1:
-    resolution: {integrity: sha512-KPP4LrvMmu6IWIcqSOcPbepTGT2Fv05TMiYwbcEaKgCVUznDNtlyXQTImJhjP+8FhNuJ+tF9SLoQgMQqDei+jA==}
+  /supabase@2.2.1:
+    resolution: {integrity: sha512-uTu8f4kT9wE3EEQTAJAWFlHyu8ymauFxWEz2FDGIQ2MzlD1Xb1NCHtsj/xvmJWqrGI1jnBYcPuatZVTHj1jR1g==}
     engines: {npm: '>=8'}
     hasBin: true
     requiresBuild: true

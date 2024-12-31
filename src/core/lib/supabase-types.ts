@@ -25,6 +25,7 @@ export type Database = {
           user_id: string | null;
           user_input_audio_file_ref: string | null;
           user_input_transcript: string | null;
+          user_rating: number | null;
         };
         Insert: {
           content: string;
@@ -38,6 +39,7 @@ export type Database = {
           user_id?: string | null;
           user_input_audio_file_ref?: string | null;
           user_input_transcript?: string | null;
+          user_rating?: number | null;
         };
         Update: {
           content?: string;
@@ -51,6 +53,7 @@ export type Database = {
           user_id?: string | null;
           user_input_audio_file_ref?: string | null;
           user_input_transcript?: string | null;
+          user_rating?: number | null;
         };
         Relationships: [];
       };
