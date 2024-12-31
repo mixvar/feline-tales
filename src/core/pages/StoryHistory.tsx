@@ -15,8 +15,8 @@ export const StoryHistory = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl flex flex-col gap-4">
-      <h2 className="text-3xl text-felineGreen-dark text-center font-cursive">Archiwum</h2>
+    <div className="w-full sm:px-3 flex flex-col gap-4">
+      <h2 className="text-4xl text-felineGreen-dark text-center font-cursive">Archiwum</h2>
 
       {storyHistory.error && (
         <p className="text-red-500">
@@ -25,15 +25,15 @@ export const StoryHistory = () => {
       )}
 
       {storyHistory.isPending && (
-        <div className="flex flex-col gap-4">
-          {Array.from({ length: 3 }).map((_, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: 6 }).map((_, index) => (
             <StoryPreviewTileSkeleton key={index} />
           ))}
         </div>
       )}
 
       {storyHistory.data && (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {storyHistory.data.map((story) => (
             <StoryPreviewTile
               key={story.id}
@@ -45,7 +45,7 @@ export const StoryHistory = () => {
       )}
 
       {!!storyHistory.data && storyHistory.data.length === 0 && (
-        <p className="text-center text-xl">Brak archwalnych opowiadań</p>
+        <p className="text-center text-xl">Brak archiwalnych opowiadań</p>
       )}
 
       <button
