@@ -8,7 +8,7 @@ interface Options {
   enableRandomEnding: boolean;
 }
 
-export const useStoryGeneration = (
+export const useStoryGenerationMutation = (
   { enableNarrationGeneration, enableRandomEnding }: Options,
 ) => {
   const queryClient = useQueryClient();

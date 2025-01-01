@@ -22,6 +22,13 @@ Deno.serve(async (req) => {
     const supabase = getSupabaseClient(req);
     const { storyId, rating } = (await req.json()) as RequestPayload;
 
+    if (!validateRating(rating)) {
+      return new Response("Rating must be an integer between 1 and 5", {
+        headers: corsHeaders,
+        status: 400,
+      });
+    }
+
     console.log("updating story rating...", { storyId, rating });
 
     const { error } = await supabase
@@ -35,15 +42,19 @@ Deno.serve(async (req) => {
 
     console.log("story rating updated successfully!");
 
-    return new Response(
-      null,
-      { headers: { ...corsHeaders }, status: 204 },
-    );
+    return new Response(null, {
+      headers: corsHeaders,
+      status: 204,
+    });
   } catch (error) {
     console.error("Error processing request:", error);
-    return new Response(
-      "An error occurred while rating the story.",
-      { headers: { ...corsHeaders }, status: 500 },
-    );
+    return new Response("An error occurred while rating the story.", {
+      headers: corsHeaders,
+      status: 500,
+    });
   }
 });
+
+const validateRating = (rating: number): boolean => {
+  return Number.isInteger(rating) && rating >= 1 && rating <= 5;
+};

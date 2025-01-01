@@ -6,6 +6,7 @@ export interface StoryObject {
   title: string;
   subTitle?: string;
   text: string;
+  rating?: number;
   createdAt: string;
   imageUrl?: string;
   narrationAudioUrl?: string;
@@ -35,6 +36,7 @@ export const createStoryObject = async (
     title: story.title,
     text: story.content,
     createdAt: story.created_at,
+    rating: story.user_rating ?? undefined,
     subTitle,
     imageUrl,
     narrationAudioUrl,

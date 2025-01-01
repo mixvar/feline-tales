@@ -1,4 +1,5 @@
 import { StoryObject } from '../utils/stories.ts';
+import { StoryRatingForm } from './StoryRatingForm.tsx';
 
 interface StoryDisplayProps {
   story: StoryObject;
@@ -24,15 +25,21 @@ export const StoryDisplay = ({ story, renderButton }: StoryDisplayProps) => {
               </div>
             )}
           </div>
+
           <div className="p-6 md:w-1/2 md:overflow-y-auto md:max-h-[500px]">
             <h2 className="font-cursive text-2xl md:text-4xl mb-4">{story.title}</h2>
+
             {story.subTitle && (
               <p className="text-xl leading-relaxed opacity-60 mb-4 italic">{story.subTitle}</p>
             )}
+
             <p className="text-lg leading-relaxed whitespace-pre-wrap">{story.text}</p>
+
+            <StoryRatingForm story={story} />
           </div>
         </div>
       </div>
+
       {renderButton?.()}
     </div>
   );

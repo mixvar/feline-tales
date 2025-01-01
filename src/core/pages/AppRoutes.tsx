@@ -13,7 +13,7 @@ import { StoryDisplayWrapper } from '../components/StoryDisplayWrapper.tsx';
 import { StoryGenerationProgress } from '../components/StoryGenerationProgress.tsx';
 import { StoryInputForm } from '../components/StoryInputForm.tsx';
 import { UserWidget } from '../components/UserWidget.tsx';
-import { useStoryGeneration } from '../hooks/useStoryGeneration.ts';
+import { useStoryGenerationMutation } from '../hooks/useStoryGenerationMutation.ts';
 import { User } from '../types.ts';
 import { StoryHistory } from './StoryHistory.tsx';
 
@@ -87,7 +87,7 @@ const NewStoryRoute = ({
 }) => {
   const [userInput, setUserInput] = useState('');
   const navigate = useNavigate();
-  const storyGen = useStoryGeneration({
+  const storyGen = useStoryGenerationMutation({
     enableNarrationGeneration,
     enableRandomEnding,
   });

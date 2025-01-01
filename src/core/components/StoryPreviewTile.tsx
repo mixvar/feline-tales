@@ -33,10 +33,23 @@ export const StoryPreviewTile = ({ story, onClick }: StoryPreviewTileProps) => {
           <h3 className="font-cursive text-2xl text-felineGreen-dark line-clamp-1">
             {story.title}
           </h3>
-          <p className="text-sm text-gray-500 ">{createdAt}</p>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500 ">{createdAt}</p>
+            <RatingStars rating={story.rating ?? 0} />
+          </div>
           <p className="text-sm line-clamp-3 text-gray-700">{story.text}</p>
         </div>
       </div>
+    </div>
+  );
+};
+
+const RatingStars = ({ rating }: { rating: number }) => {
+  return (
+    <div className="flex gap-1 text-xs">
+      {[...Array<void>(rating)].map((_, i) => {
+        return <span key={i}>⭐</span>;
+      })}
     </div>
   );
 };
