@@ -101,7 +101,7 @@ const IMAGE_PROMPT_GEN_PROMPT = `
 const TITLE_GEN_PROMPT = `
   Jesteś generatorem tytułów do opowiadań.
   Wygeneruj krótki, chwytliwy tytuł do przedstawionej historii.
-  Tytuł powinien być po polsku, max 6 słów.
+  Tytuł powinien być w tym samym języku co historia, max 6 słów.
   Tytuł powinien być intrygujący i nawiązywać do głównego wątku lub bohatera historii.
   Unikaj słów "kot" i "kotek" w tytule.
   Nie dodawaj kropki na końcu tytułu.
