@@ -27,15 +27,16 @@ const SYSTEM_PROMPT_BASE = `
   Historia musi zawierać koci motyw, np kociego bohatera lub koci świat.
   Opowiadanie powinno zawierać od 100 do 200 słów.
   Unikaj utartych motywów. Użyj finezyjnych i niestandardowych imion, chyba że historia wymaga inaczej.
+  Historię wygeneruj w takim języku w jakim użytkownik podał dane wejściowe - polskim lub angielskim.
 `;
 
 const SYSTEM_ENDING_PROMPTS = [
   "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym",
   "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym. Dodatkowo podkręć motyw kociego świata - wszyscy bohaterowie i cały świat jest koci.",
-  "Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera. Opowiadanie nie powinno być dziecinne, świat i bohaterowie powini być bardziej realistyczni niż w bajkach dla dzieci i nieco mroczni. Nadal jest to opowiadanie w fantastycznym świecie, tylko dla starszych odbiorców.",
+  "Opowiadanie nie powinno być dziecinne, świat i bohaterowie powini być bardziej realistyczni niż w bajkach dla dzieci i nieco mroczni. Nadal jest to opowiadanie w fantastycznym świecie, tylko dla starszych odbiorców.",
   "Historia ma być wyjątkowo słodka i pozytywna. Bohater zdobywa wszystko czego chce i jest szczęśliwy. Nie ma żadnego morału ani zwrotu akcji.",
   "Protagonista to anty-bohater, który zdobywa wszystko czego chce, ale cierpią na tym inni. Zarysuj konsekwencje jego akcji. Brak szczęśliwego zakończenia. Brak morału. Dla starszych odbiorców.",
-  "Bohater dostaje bolesną nauczkę że to czego się pragnie często nie jest tym czego się naprawdę potrzebuje",
+  "Bohater dostaje bolesną nauczkę że to czego się pragnie często nie jest tym czego się naprawdę potrzebuje. Bohater zrozumie to za późno aby zakończenie było szczęśliwe.",
   "Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.",
   "Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.",
   "Historia ma mieć zakończenie otwarte do interpretacji przez słuchacza, bez jasnej odpowiedzi co się stało. Nie powinna zawierać typowego dla bajek morału. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata",
@@ -43,12 +44,14 @@ const SYSTEM_ENDING_PROMPTS = [
   "Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.",
   "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater na końcu zostaje z trudnością pokonany ale istnieje groźba że powróci. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.",
   "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater zostaje pokonany, ale ginie też protagonista. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.",
-  "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Protagonista zwycięża ale okazuje się że zły bohater był kierowany wyższym dobrem i teraz sytuacja jest jeszcze gorsza. Możesz przekroczyć limit słów o 50 żeby lepiej zakończenie.",
+  "Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Protagonista zwycięża ale okazuje się że zły bohater był kierowany wyższym dobrem i teraz sytuacja jest jeszcze gorsza. Zakończenie jest tragiczne. Możesz przekroczyć limit słów o 50 żeby lepiej zakończenie.",
   "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla jednego z kochanków.",
   "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla obu kochanków. (wyjaśnij w jaki sposób)",
-  "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Miłość zwycięża ale kochankowie wiele tracą. (wyjaśnij w jaki sposób)",
-  "Inspiruj się biblijnymi przypowieściami, historia ma nauczyć czegoś ważnego słuchaczy.",
+  "Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Miłość zwycięża ale kochankowie musili wiele poświęcić. (wyjaśnij w jaki sposób)",
+  "Inspiruj się biblijnymi przypowieściami, historia ma nauczyć czegoś ważnego słuchaczy. Historia dla starszych odbiorców. Imituj język biblijny.",
   "Stórz przerażającą historię jak z horroru. Historia dla dorosłych. Przynajmniej jeden bohater ginie albo traci rozum.",
+  "Postaraj się zaskoczyć słuchacza niestandardowym zakończeniem i formą opowiadania. Eksperymentalne lub artystyczne opowiadanie dla dojrzałych odbiorców.",
+  "Historia ma mieć filozoficzną naturę. Jest snem bohatera co staje się jasne dla słuchacza dopiero na koniec. Brak morału. Abstrakcyjna fabuła.",
 ];
 
 const SYSTEM_STORY_REFINMENT_PROMPT = `

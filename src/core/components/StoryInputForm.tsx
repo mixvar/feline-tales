@@ -1,3 +1,4 @@
+import { FormattedMessage, useIntl } from 'react-intl';
 import { PrimaryButton } from './base/PrimaryButton';
 import { SecondaryButton } from './base/SecondaryButton';
 
@@ -16,17 +17,20 @@ export const StoryInputForm = ({
   userInput,
   onUserInputChange,
 }: StoryInputFormProps) => {
+  const intl = useIntl();
+  const storyInputPrefix = intl.formatMessage({ id: 'storyInput.prefix' });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim()) return;
-    onSubmit('Opowiedz mi historię o ' + userInput);
+    onSubmit(`${storyInputPrefix} ${userInput}`);
   };
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl flex flex-col gap-4">
       <div className="relative">
         <div className="absolute top-4 left-0 right-0 text-center text-felineGreen-dark pointer-events-none opacity-80">
-          Opowiedz mi historię o...
+          {storyInputPrefix}...
         </div>
         <textarea
           value={userInput}
@@ -41,10 +45,10 @@ export const StoryInputForm = ({
       </div>
       <div className="flex flex-col gap-2">
         <PrimaryButton disabled={!userInput.trim()} buttonProps={{ type: 'submit' }}>
-          Opowiedz ✨
+          <FormattedMessage id="storyInput.submit" />
         </PrimaryButton>
         <SecondaryButton onClick={onHistoryClick} buttonProps={{ type: 'button' }}>
-          Zobacz archiwum 📚
+          <FormattedMessage id="storyInput.archive" />
         </SecondaryButton>
       </div>
       {error && <p className="text-red-500 text-center">{error}</p>}

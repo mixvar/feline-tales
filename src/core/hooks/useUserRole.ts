@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { useIntl } from "react-intl";
 import { USER_ROLE_QUERY_KEY } from "../lib/query-keys";
 import { supabase } from "../lib/supabase";
 
 export type UserRole = "super-user" | "none";
 
 export const useUserRole = () => {
+  const intl = useIntl();
+
   const query = useQuery({
     queryKey: USER_ROLE_QUERY_KEY,
     queryFn: async () => {
@@ -13,7 +16,7 @@ export const useUserRole = () => {
       );
 
       if (!resp.data) {
-        throw new Error("Nie udało się pobrać roli użytkownika");
+        throw new Error(intl.formatMessage({ id: "error.userRole.fetch" }));
       }
 
       return resp.data.userRole;

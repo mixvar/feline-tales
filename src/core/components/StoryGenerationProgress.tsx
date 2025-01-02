@@ -1,40 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useIntl } from 'react-intl';
 import { StoryDisplaySkeleton } from './StoryDisplaySkeleton';
 
 const CHANGE_MESSAGE_INTERVAL = 4000;
 
-const PROGRESS_MESSAGES = [
-  'Delikatnie szturcham śpiącego pisarza łapką...',
-  'Mruczeniem przywołuję wenę twórczą...',
-  'Łapka za łapką, historia nabiera kształtu...',
-  'Przerwa na herbatę...',
-  'Pisarz właśnie zmienił zakończenie...',
-  'Kot malarz już moczy ogon w farbie aby namalować ilustrację...',
-  'Profesjonalny narrator analizuje skrypt...',
-  'Historia wymaga recenzji poprzez lożę kocich krytyków...',
-  'Ostatnie przeciągnięcie i gotowe... Mrrr...',
-  'Jest! Wysyłanie pocztą gołębiową...',
-];
-
 export const StoryGenerationProgress = () => {
   const [messageIndex, setMessageIndex] = useState(0);
+  const progressMessages = useProgressMessages();
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setMessageIndex((current) =>
-        current < PROGRESS_MESSAGES.length - 1 ? current + 1 : current
-      );
+      setMessageIndex((current) => (current < progressMessages.length - 1 ? current + 1 : current));
     }, CHANGE_MESSAGE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [progressMessages.length]);
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <StoryDisplaySkeleton />
       <p className="text-lg text-felineGreen-dark font-medium text-center">
-        {PROGRESS_MESSAGES[messageIndex]}
+        {progressMessages[messageIndex]}
       </p>
     </div>
+  );
+};
+
+const useProgressMessages = () => {
+  const intl = useIntl();
+
+  return useMemo(
+    () => [
+      intl.formatMessage({ id: 'progress.message.1' }),
+      intl.formatMessage({ id: 'progress.message.2' }),
+      intl.formatMessage({ id: 'progress.message.3' }),
+      intl.formatMessage({ id: 'progress.message.4' }),
+      intl.formatMessage({ id: 'progress.message.5' }),
+      intl.formatMessage({ id: 'progress.message.6' }),
+      intl.formatMessage({ id: 'progress.message.7' }),
+      intl.formatMessage({ id: 'progress.message.8' }),
+      intl.formatMessage({ id: 'progress.message.9' }),
+      intl.formatMessage({ id: 'progress.message.10' }),
+    ],
+    [intl]
   );
 };

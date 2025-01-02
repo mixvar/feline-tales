@@ -1,3 +1,5 @@
+import { FormattedMessage } from 'react-intl';
+
 export const Spinner = () => {
   return (
     <div role="status" className="flex items-center justify-center">
@@ -17,7 +19,9 @@ export const Spinner = () => {
           fill="currentFill"
         />
       </svg>
-      <span className="sr-only">Loading...</span>
+      <span className="sr-only">
+        <FormattedMessage id="common.loading" />
+      </span>
     </div>
   );
 };

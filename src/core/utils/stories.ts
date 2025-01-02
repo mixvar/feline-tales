@@ -26,10 +26,13 @@ export const createStoryObject = async (
     options.excludeNarration ? null : story.content_audio_file_ref,
   );
 
+  // that is an awful hack caused by lack of actual story translation
+  // we could display user prompt in other way than fake subtitle
+  // to make it go away
   const subTitle = story.user_input_transcript?.replace(
     "Opowiedz mi historię o",
     "Opowieść o",
-  );
+  ).replace("Tell me a story about", "Story about");
 
   return {
     id: story.id,

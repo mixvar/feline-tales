@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useIntl } from "react-intl";
 import { supabase } from "../lib/supabase";
 import { STORY_BY_ID_QUERY_KEY } from "../lib/query-keys.ts";
 
@@ -11,6 +12,7 @@ interface Options {
 export const useStoryGenerationMutation = (
   { enableNarrationGeneration, enableRandomEnding }: Options,
 ) => {
+  const intl = useIntl();
   const queryClient = useQueryClient();
   const [storyId, setStoryId] = useState<string | null>(null);
 
@@ -31,7 +33,7 @@ export const useStoryGenerationMutation = (
       );
 
       if (!resp.data) {
-        throw new Error("Nie udało się wygenerować historii");
+        throw new Error(intl.formatMessage({ id: "error.story.generation" }));
       }
 
       return resp.data.storyId;

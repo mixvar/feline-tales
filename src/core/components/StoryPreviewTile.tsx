@@ -1,5 +1,6 @@
 import { StoryObject } from '../utils/stories';
 import { clsx } from 'clsx';
+import { FormattedDate, useIntl } from 'react-intl';
 
 interface StoryPreviewTileProps {
   story: StoryObject;
@@ -7,12 +8,6 @@ interface StoryPreviewTileProps {
 }
 
 export const StoryPreviewTile = ({ story, onClick }: StoryPreviewTileProps) => {
-  const createdAt = new Date(story.createdAt).toLocaleDateString('pl-PL', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
   return (
     <div
       onClick={onClick}
@@ -25,7 +20,7 @@ export const StoryPreviewTile = ({ story, onClick }: StoryPreviewTileProps) => {
         <div className="w-1/4 flex-shrink-0 overflow-hidden">
           <img
             src={story.imageUrl}
-            alt="Ilustracja do historii"
+            alt={useIntl().formatMessage({ id: 'storyPreview.image.alt' })}
             className="w-full h-[150px] object-cover scale-110 group-hover:scale-105 transition-transform duration-500 bg-felineBg-dark"
           />
         </div>
@@ -34,7 +29,9 @@ export const StoryPreviewTile = ({ story, onClick }: StoryPreviewTileProps) => {
             {story.title}
           </h3>
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500 ">{createdAt}</p>
+            <p className="text-sm text-gray-500">
+              <FormattedDate value={story.createdAt} year="numeric" month="long" day="numeric" />
+            </p>
             <RatingStars rating={story.rating ?? 0} />
           </div>
           <p className="text-sm line-clamp-3 text-gray-700">{story.text}</p>
@@ -45,8 +42,12 @@ export const StoryPreviewTile = ({ story, onClick }: StoryPreviewTileProps) => {
 };
 
 const RatingStars = ({ rating }: { rating: number }) => {
+  const intl = useIntl();
   return (
-    <div className="flex gap-1 text-xs">
+    <div
+      className="flex gap-1 text-xs"
+      aria-label={intl.formatMessage({ id: 'storyPreview.rating.aria' }, { rating })}
+    >
       {[...Array<void>(rating)].map((_, i) => {
         return <span key={i}>⭐</span>;
       })}

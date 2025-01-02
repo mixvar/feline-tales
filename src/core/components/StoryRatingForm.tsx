@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useStoryRatingMutation } from '../hooks/useStoryRatingMutation.ts';
 import { StoryObject } from '../utils/stories.ts';
 
@@ -9,6 +10,7 @@ interface StoryRatingProps {
 export const StoryRatingForm = ({ story }: StoryRatingProps) => {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const { mutate: rateStory } = useStoryRatingMutation();
+  const intl = useIntl();
 
   const storyRating = story.rating ?? 0;
 
@@ -33,7 +35,9 @@ export const StoryRatingForm = ({ story }: StoryRatingProps) => {
 
   return (
     <section className="mt-5 pt-5 flex flex-col gap-1 border-t border-felineOrange-dark border-opacity-30">
-      <span className="text-sm">Jak oceniasz tą historię?</span>
+      <span className="text-sm">
+        <FormattedMessage id="storyRating.question" />
+      </span>
       <div className="flex gap-2">
         {[1, 2, 3, 4, 5].map((position) => {
           return (
@@ -44,6 +48,8 @@ export const StoryRatingForm = ({ story }: StoryRatingProps) => {
               onMouseEnter={() => setHoveredRating(position)}
               onMouseLeave={() => setHoveredRating(null)}
               onClick={() => handleStarClick(position)}
+              role="button"
+              aria-label={intl.formatMessage({ id: 'storyRating.star.aria' }, { rating: position })}
             >
               ⭐
             </span>

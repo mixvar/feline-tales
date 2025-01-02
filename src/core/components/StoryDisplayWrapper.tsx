@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { FormattedMessage } from 'react-intl';
 import { useStoryQueryById } from '../hooks/useStoryQueryById.ts';
 import { PrimaryButton } from './base/PrimaryButton.tsx';
 import { StoryDisplay } from './StoryDisplay.tsx';
@@ -38,9 +39,13 @@ export const StoryDisplayWrapper = ({ storyId, isNew }: StoryDisplayWrapperProps
       story={storyQuery.data}
       renderButton={() =>
         isNew ? (
-          <PrimaryButton onClick={goToHome}>Opowiedz nową historię 📖</PrimaryButton>
+          <PrimaryButton onClick={goToHome}>
+            <FormattedMessage id="storyDisplay.button.newStory" />
+          </PrimaryButton>
         ) : (
-          <SecondaryButton onClick={goToHistory}>Wróć do archiwum 📚</SecondaryButton>
+          <SecondaryButton onClick={goToHistory}>
+            <FormattedMessage id="storyDisplay.button.backToArchive" />
+          </SecondaryButton>
         )
       }
     />

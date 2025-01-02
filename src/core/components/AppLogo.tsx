@@ -1,9 +1,11 @@
 import clsx from 'clsx';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 import felineStoriesLogo from '../../assets/feline-stories.webp';
 
 export const AppLogo = ({ showSmallLayout }: { showSmallLayout: boolean }) => {
+  useBrowserTitleSync();
   const navigate = useNavigate();
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -49,8 +51,16 @@ export const AppLogo = ({ showSmallLayout }: { showSmallLayout: boolean }) => {
           showSmallLayout ? 'text-5xl md:text-6xl' : 'text-5xl md:text-[6rem]'
         )}
       >
-        Kocie Opowieści
+        <FormattedMessage id="app.title" />
       </h1>
     </>
   );
+};
+
+const useBrowserTitleSync = () => {
+  const intl = useIntl();
+
+  useEffect(() => {
+    document.title = intl.formatMessage({ id: 'app.title' });
+  }, [intl, intl.locale]);
 };
