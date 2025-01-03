@@ -18,7 +18,7 @@ https://github.com/user-attachments/assets/9b14e221-2648-4f80-bc7e-4c691a7c98af
   - refine the story text (second iteration for better results)
   - generate a title for the story
   - generate a prompt for creating an illustration
-  - determining which image gen model to use based
+  - determining which image gen model to use
 - [RUNWARE.AI](https://runware.ai/) is used for generating the image
 - [Elevenlabs](https://elevenlabs.io/) is used for generating the narration voiceover
 - [Supabase](https://supabase.com/) is used to:
