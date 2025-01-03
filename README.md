@@ -1,50 +1,27 @@
-# React + TypeScript + Vite
+# Feline Tales
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App for generating unpredictable stories with illustration and narration using AI.
 
-Currently, two official plugins are available:
+Note: this is a fun project mostly hacked together before Christmas as a gift for my wife and as an AI playground for me. A lot of the code was generated and is not representative of my usual coding standards.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Expanding the ESLint configuration
+## Demo
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+https://github.com/user-attachments/assets/9b14e221-2648-4f80-bc7e-4c691a7c98af
 
-- Configure the top-level `parserOptions` property like this:
+## How it works
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react';
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-});
-```
+- user inputs short instruction what the story should be about
+- for each story a random system prompt variation is chosen out of predefiend set, for example making the story a clasic children talek, a romance, horror or something else
+- [OpenAI](https://openai.com/) GPT4o is used to:
+  - geenrate the story text
+  - refine the story text (second iteration for better results)
+  - generate a title for the story
+  - generate a prompt for creating an illustration
+  - determining which image gen model to use based
+- [RUNWARE.AI](https://runware.ai/) is used for generating the image
+- [Elevenlabs](https://elevenlabs.io/) is used for generating the narration voiceover
+- [Supabase](https://supabase.com/) is used to:
+  - execute all code requiring API calls to AI services via a deno edge function
+  - save generated story into DB
+  - save generated story assets into file storage
