@@ -1,6 +1,6 @@
 # Feline Tales
 
-App for generating unpredictable stories with illustration and narration using AI.
+App for generating unpredictable cat-themed stories with illustration and narration using AI.
 
 Note: this is a fun project mostly hacked together before Christmas as a gift for my wife and as an AI playground for me. A lot of the code was generated and is not representative of my usual coding standards.
 
