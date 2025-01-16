@@ -100,15 +100,20 @@ const IMAGE_PROMPT_GEN_PROMPT = `
     - if the hero is inside some building or vehicle, focus on it's interior
 `;
 
-const TITLE_GEN_PROMPT = `
+const TITLE_GEN_PROMPT_BASE = `
   Jesteś generatorem tytułów do opowiadań.
   Wygeneruj krótki, chwytliwy tytuł do przedstawionej historii.
-  Tytuł powinien być w tym samym języku co historia, max 6 słów.
   Tytuł powinien być intrygujący i nawiązywać do głównego wątku lub bohatera historii.
   Unikaj słów "kot" i "kotek" w tytule.
   Nie dodawaj kropki na końcu tytułu.
   Ważna jest poprawność gramatyczna.
+  Tytuł nie może być dłuższy niż 6 słów.
 `;
+
+const TITLE_GEN_PROMPT_LANG_SPECIFIC = {
+  'pl-PL': 'Tytuł wygeneruj w języku polskim.',
+  'en-US': 'Tytuł wygeneruj w języku angielskim.',
+} as const;
 
 const NARRATION_INTRO = {
   'pl-PL': 'Oto opowiadanie:',
@@ -215,7 +220,7 @@ Deno.serve(async (req) => {
         createImage(storyText),
 
         Promise.all([
-          generateTitle(storyText),
+          generateTitle(storyText, locale),
           refineStoryText(storyText, userInput, storySystemPrompt),
         ]).then(async ([storyTitle, refinedStoryText]) => ({
           storyTitle,
@@ -470,15 +475,20 @@ async function generateImage(imagePrompt: string): Promise<string> {
   }
 }
 
-async function generateTitle(storyText: string): Promise<string> {
+async function generateTitle(storyText: string, locale: RequestPayload['locale']): Promise<string> {
   console.log('generating title...');
+
+  const titleSystemPrompt = [TITLE_GEN_PROMPT_BASE, TITLE_GEN_PROMPT_LANG_SPECIFIC[locale]].join(
+    '\n'
+  );
+
   const titleCompletion = await openAi.chat.completions.create({
     model: 'gpt-4o',
     store: false,
     stream: false,
     temperature: 0.8,
     messages: [
-      { role: 'system', content: TITLE_GEN_PROMPT },
+      { role: 'system', content: titleSystemPrompt },
       { role: 'user', content: storyText },
     ],
   });
