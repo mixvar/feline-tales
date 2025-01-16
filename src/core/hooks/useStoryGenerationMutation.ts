@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useIntl } from "react-intl";
 import { supabase } from "../lib/supabase";
 import { STORY_BY_ID_QUERY_KEY } from "../lib/query-keys.ts";
+import { useLocaleContext } from "../contexts/locale-context.tsx";
 
 interface Options {
   enableNarrationGeneration: boolean;
@@ -13,6 +14,7 @@ export const useStoryGenerationMutation = (
   { enableNarrationGeneration, enableRandomEnding }: Options,
 ) => {
   const intl = useIntl();
+  const { locale } = useLocaleContext();
   const queryClient = useQueryClient();
   const [storyId, setStoryId] = useState<string | null>(null);
 
@@ -25,6 +27,7 @@ export const useStoryGenerationMutation = (
         "generate-story",
         {
           body: {
+            locale,
             userInput,
             narrationEnabled: enableNarrationGeneration,
             randomEndingEnabled: enableRandomEnding,
