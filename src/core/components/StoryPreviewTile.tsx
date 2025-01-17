@@ -1,7 +1,7 @@
 import { StoryObject } from '../utils/stories';
 import { clsx } from 'clsx';
 import { FormattedDate, useIntl } from 'react-intl';
-import { SupportedLocale } from '../contexts/locale-context';
+import { LOCALE_FLAGS } from '../contexts/locale-context';
 
 interface StoryPreviewTileProps {
   story: StoryObject;
@@ -32,9 +32,7 @@ export const StoryPreviewTile = ({ story, onClick }: StoryPreviewTileProps) => {
           <div className="flex justify-between items-center">
             <p className="text-sm text-gray-500">
               <FormattedDate value={story.createdAt} year="numeric" month="long" day="numeric" />
-              <span className="ml-1 opacity-60">
-                {story.locale === SupportedLocale.PL ? '🇵🇱' : '🇬🇧'}
-              </span>
+              <span className="ml-1 opacity-60">{LOCALE_FLAGS[story.locale]}</span>
             </p>
             <RatingStars rating={story.rating ?? 0} />
           </div>

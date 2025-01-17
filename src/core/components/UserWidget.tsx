@@ -6,7 +6,7 @@ import { Toggle } from './base/Toggle';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
-import { SupportedLocale, useLocaleContext } from '../contexts/locale-context';
+import { SupportedLocale, useLocaleContext, LOCALE_FLAGS } from '../contexts/locale-context';
 
 interface UserWidgetProps {
   user: User;
@@ -38,8 +38,22 @@ export const UserWidget = ({
     await supabase.auth.signOut();
   };
 
+  const renderFlags = () => {
+    return Object.entries(LOCALE_FLAGS).map(([localeKey, flag]) => (
+      <span
+        key={localeKey}
+        className={`${localeKey === locale.toString() ? 'opacity-100' : 'opacity-40'} mx-0.5`}
+      >
+        {flag}
+      </span>
+    ));
+  };
+
   const handleToggleLanguage = () => {
-    setLocale(locale === SupportedLocale.PL ? SupportedLocale.EN : SupportedLocale.PL);
+    const locales = [SupportedLocale.PL, SupportedLocale.EN, SupportedLocale.DE];
+    const currentIndex = locales.indexOf(locale);
+    const nextLocale = locales[(currentIndex + 1) % locales.length];
+    setLocale(nextLocale);
   };
 
   const gravatarUrl = user.email
@@ -83,9 +97,10 @@ export const UserWidget = ({
           </div>
           <button
             onClick={handleToggleLanguage}
-            className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors border-b border-gray-200"
+            className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors border-b border-gray-200 flex items-center"
           >
             <FormattedMessage id="userWidget.toggle.language" />
+            <span className="ml-auto">{renderFlags()}</span>
           </button>
           <button
             onClick={() => void handleSignOut()}

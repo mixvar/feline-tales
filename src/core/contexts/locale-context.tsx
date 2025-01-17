@@ -4,7 +4,14 @@ import { createContext, useMemo, useState, useContext } from 'react';
 export enum SupportedLocale {
   PL = 'pl-PL',
   EN = 'en-US',
+  DE = 'de-DE',
 }
+
+export const LOCALE_FLAGS: Record<SupportedLocale, string> = {
+  [SupportedLocale.PL]: '🇵🇱',
+  [SupportedLocale.EN]: '🇬🇧',
+  [SupportedLocale.DE]: '🇩🇪',
+} as const;
 
 interface LocaleContextPayload {
   locale: SupportedLocale;
@@ -45,10 +52,14 @@ export const useLocaleContext = (): LocaleContextPayload => {
 };
 
 const resolveDefaultLocale = () => {
-  const browserLocale = navigator.language;
+  const browserLocale = navigator.language.toLowerCase();
 
-  if (browserLocale.toLowerCase().startsWith('pl')) {
+  if (browserLocale.startsWith('pl')) {
     return SupportedLocale.PL;
+  }
+
+  if (browserLocale.startsWith('de')) {
+    return SupportedLocale.DE;
   }
 
   return SupportedLocale.EN;

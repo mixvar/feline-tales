@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { IntlProvider } from 'react-intl';
-import enMessages from '../../translations/en.json';
 import plMessages from '../../translations/pl.json';
+import enMessages from '../../translations/en.json';
+import deMessages from '../../translations/de.json';
 import { SupportedLocale, useLocaleContext } from './locale-context.tsx';
 
 export const I18nProvider = ({ children }: { children: React.ReactNode }) => {
@@ -14,6 +15,9 @@ export const I18nProvider = ({ children }: { children: React.ReactNode }) => {
 
       case SupportedLocale.EN:
         return enMessages;
+
+      case SupportedLocale.DE:
+        return deMessages;
     }
   }, [locale]);
 

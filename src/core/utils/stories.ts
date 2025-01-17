@@ -30,12 +30,15 @@ export const createStoryObject = async (
   // to make it go away
   const subTitle = story.user_input_transcript
     ?.replace('Opowiedz mi historię o', 'Opowieść o')
-    .replace('Tell me a story about', 'Story about');
+    .replace('Tell me a story about', 'Story about')
+    .replace('Erzähle mir eine Geschichte über', 'Geschichte über');
 
   const parseLocale = (locale: string): SupportedLocale => {
     switch (locale) {
       case 'en-US':
         return SupportedLocale.EN;
+      case 'de-DE':
+        return SupportedLocale.DE;
       default:
         return SupportedLocale.PL;
     }

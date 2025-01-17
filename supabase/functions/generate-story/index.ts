@@ -1,5 +1,7 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
+import { Runware } from 'npm:@runware/sdk-js';
+import { OpenAI } from 'npm:openai';
 
 import { contentTypeHeaders, corsHeaders } from '../_shared/headers.ts';
 import {
@@ -10,118 +12,15 @@ import {
   StoryEntity,
   SupabaseClient,
 } from '../_shared/supabase.ts';
-import { OpenAI } from 'npm:openai';
-import { Runware } from 'npm:@runware/sdk-js';
+import { NARRATION_CONFIG } from './prompts/constants.ts';
+import { getImagePrompts, getLangSpecificSystemPrompts, type Locale } from './prompts/index.ts';
 
 console.log('generate-story function is running');
 
 const DESIRED_IMAGE_TIMEOUT_MS = 30_000;
 
-const SYSTEM_PROMPT_BASE = `
-  Jesteś opowiadaczem kocich historii. 
-  Twoim celem jest wygenerowanie historii na podstawie danych wprowadzonych przez użytkownika.
-  Jeśli dane wejściowe użytkownika nie mają sensu w tym kontekście, po prostu wygeneruj losową historię.
-  Wejście użytkownika powinno nadać temat historii, może mieć wpływ na fabułę, bohaterów i świat.
-  Historia musi zawierać koci motyw, np kociego bohatera lub koci świat.
-  Opowiadanie powinno zawierać od 100 do 200 słów.
-  Unikaj utartych motywów. Użyj finezyjnych i niestandardowych imion, chyba że historia wymaga inaczej.
-`;
-
-const SYSTEM_PROMPT_LANG_SPECIFIC = {
-  'pl-PL': 'Historię wygeneruj w języku polskim.',
-  'en-US': 'Historię wygeneruj w języku angielskim.',
-} as const;
-
-const SYSTEM_ENDING_PROMPTS = [
-  'Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym',
-  'Historia ma zakończyć się standardowo - lekki zwrot akcji z lekcją lub morałem dla bohatera i elementem humorystycznym. Dodatkowo podkręć motyw kociego świata - wszyscy bohaterowie i cały świat jest koci.',
-  'Opowiadanie nie powinno być dziecinne, świat i bohaterowie powini być bardziej realistyczni niż w bajkach dla dzieci i nieco mroczni. Nadal jest to opowiadanie w fantastycznym świecie, tylko dla starszych odbiorców.',
-  'Historia ma być wyjątkowo słodka i pozytywna. Bohater zdobywa wszystko czego chce i jest szczęśliwy. Nie ma żadnego morału ani zwrotu akcji.',
-  'Historia ma być na początku wyjątkowo słodka i pozytywna. Bohater zdobywa wszystko czego chce i jest szczęśliwy. Nie ma żadnego morału. Na sam koniec oakzuje się że to tylko sen bohatera a rzeczywistość jest ponura i przygnębiająca.',
-  'Protagonista to anty-bohater, który zdobywa wszystko czego chce, ale cierpią na tym inni. Zarysuj konsekwencje jego akcji. Brak szczęśliwego zakończenia. Brak morału. Dla starszych odbiorców.',
-  'Bohater dostaje bolesną nauczkę że to czego się pragnie często nie jest tym czego się naprawdę potrzebuje. Bohater zrozumie to za późno aby zakończenie było szczęśliwe.',
-  'Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.',
-  'Historia ma mieć smutne lub słodko-kwaśne zakończenie dla głównego bohatera. Historia pisana dla starszych odbiorców.',
-  'Historia ma mieć zakończenie otwarte do interpretacji przez słuchacza, bez jasnej odpowiedzi co się stało. Nie powinna zawierać typowego dla bajek morału. Historia przeznaczona dla nieco starszych odbiorców niż małe dzieci. Zaskocz słuchacza niestandardową fabułą i ładnym językiem i opisami świata',
-  'Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.',
-  'Zamiast typowej bajki w fantastycznym świecie, opowiedz realistyczną historię o życiu zwykłego kota w zwykłym świecie. Ma mieć charakter zbliżony do filmu dokumentalnego. Historia przeznaczona dla starszych odbiorców niż małe dzieci. Używaj suchego, rzeczowego języka. Nie dodawaj bogatych opisów świata.',
-  'Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater na końcu zostaje z trudnością pokonany ale istnieje groźba że powróci. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.',
-  'Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Zły bohater zostaje pokonany, ale ginie też protagonista. Możesz przekroczyć limit słów o 50 żeby lepiej opisać konflikt.',
-  'Zawrzyj motyw walki dobra ze złem (pokaż w fabule a nie mów tego dosłownie). Stwórz czarny charakter z którym zmaga się bohater. Historia dla starszych odbiorców. Protagonista zwycięża ale okazuje się że zły bohater był kierowany wyższym dobrem i teraz sytuacja jest jeszcze gorsza. Zakończenie jest tragiczne. Możesz przekroczyć limit słów o 50 żeby lepiej zakończenie.',
-  'Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla jednego z kochanków.',
-  'Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Opowieść kończy się tragicznie dla obu kochanków. (wyjaśnij w jaki sposób)',
-  'Zawrzyj motyw miłosny. Bohater musi przezwyciężyć jakieś trudności aby być z ukochaną/ukochanym. Miłość zwycięża ale kochankowie musili wiele poświęcić. (wyjaśnij w jaki sposób)',
-  'Inspiruj się biblijnymi przypowieściami, historia ma nauczyć czegoś ważnego słuchaczy. Historia dla starszych odbiorców. Imituj język biblijny.',
-  'Stórz przerażającą historię jak z horroru. Historia dla dorosłych. Przynajmniej jeden bohater ginie albo traci rozum.',
-  'Postaraj się zaskoczyć słuchacza niestandardowym zakończeniem i formą opowiadania. Eksperymentalne lub artystyczne opowiadanie dla dojrzałych odbiorców.',
-  'Historia ma mieć filozoficzną naturę. Jest snem bohatera co staje się jasne dla słuchacza dopiero na koniec. Brak morału. Abstrakcyjna fabuła.',
-];
-
-const SYSTEM_STORY_REFINMENT_PROMPT = `
-  Popraw lekko historię aby była bardziej interesująca a zakończenie sensowne. 
-  Pamiętaj o wcześniejszych wytycznych. Zmieść się w zakresie od 150 do 250 słów. Nie zmieniaj nazw bohaterów.
-  Jeżeli tekst zawiera błędy gramatyczne albo nieistniejące słowa, popraw je.
-`;
-
-const IMAGE_GEN_MODEL_DECISION_PROMPT = `
-  Your role is to receive an image description and to assign it to image generation model. 
-  The output should contain just the model name. 
-  To determine the model, count all the actors present in the image description (Actor - a human or animal present in the scene, the main character or just element of the background)
-
-  models:
-  jugg - default, use it if the scene contains only 1 Actor. it handles abstract and futuristic scenes well.
-  flux - ALWAYS USE IF THERE IS MORE THAN 1 Actor! Use also if the character is half-human half cat, or if there is a complex interior in realistic setting
-`;
-
-const IMAGE_PROMPT_GEN_PROMPT = `
-  You are a description generator for illustrations for user stories.
-  Generate a description in English, max 50 words.
-  We want to present a scene with the main character from the beginning of the story, without giving away the ending.
-  Start with “Semi-realistic story illustration.” then include:
-    - description of the emotion and colors of the picture
-    - description of the hero's appearance and position
-    - description of the environment
-  
-  As for the hero:
-    - indicate what the hero is (human? cat? something else?)
-    - if the hero is human, specify the gender
-    - Avoid names and first names
-    - mention hero's cloths if that is relevant for the setting
-    - if it is a love story, include both lovers
-    - otherwise prefix the hero description with 'single'
-
-  As for the scene and environment:
-    - prefer outside setting if it makes sense for the story
-    - look for a simple composition
-    - avoid a lot of details
-    - Avoid names and first names
-    - give the characteristics of the place
-    - specify spatial relation of the hero to the environment
-    - if the hero is inside some building or vehicle, focus on it's interior
-`;
-
-const TITLE_GEN_PROMPT_BASE = `
-  Jesteś generatorem tytułów do opowiadań.
-  Wygeneruj krótki, chwytliwy tytuł do przedstawionej historii.
-  Tytuł powinien być intrygujący i nawiązywać do głównego wątku lub bohatera historii.
-  Unikaj słów "kot" i "kotek" w tytule.
-  Nie dodawaj kropki na końcu tytułu.
-  Ważna jest poprawność gramatyczna.
-  Tytuł nie może być dłuższy niż 6 słów.
-`;
-
-const TITLE_GEN_PROMPT_LANG_SPECIFIC = {
-  'pl-PL': 'Tytuł wygeneruj w języku polskim.',
-  'en-US': 'Tytuł wygeneruj w języku angielskim.',
-} as const;
-
-const NARRATION_INTRO = {
-  'pl-PL': 'Oto opowiadanie:',
-  'en-US': 'Here unfolds a story of...',
-} as const;
-
 type RequestPayload = {
-  locale: 'pl-PL' | 'en-US';
+  locale: Locale;
   userInput: string;
   narrationEnabled?: boolean;
   randomEndingEnabled?: boolean;
@@ -206,7 +105,7 @@ Deno.serve(async (req) => {
         return Promise.resolve(null);
       }
 
-      return generateNarration(title, text, locale)
+      return generateNarration(title, text)
         .then((file) => uploadNarrationToStorage(supabase, user.id, file))
         .catch((error) => {
           console.error('Failed to create narration', error.message);
@@ -221,7 +120,7 @@ Deno.serve(async (req) => {
 
         Promise.all([
           generateTitle(storyText, locale),
-          refineStoryText(storyText, userInput, storySystemPrompt),
+          refineStoryText(storyText, userInput, storySystemPrompt, locale),
         ]).then(async ([storyTitle, refinedStoryText]) => ({
           storyTitle,
           refinedStoryText,
@@ -259,7 +158,8 @@ Deno.serve(async (req) => {
 async function refineStoryText(
   storyText: string,
   userInput: string,
-  storySystemPrompt: string
+  storySystemPrompt: string,
+  locale: Locale
 ): Promise<string> {
   console.log('refining story text...');
   const storyCompletion2 = await openAi.chat.completions.create({
@@ -271,7 +171,10 @@ async function refineStoryText(
       { role: 'developer', content: storySystemPrompt },
       { role: 'user', content: userInput },
       { role: 'assistant', content: storyText },
-      { role: 'developer', content: SYSTEM_STORY_REFINMENT_PROMPT },
+      {
+        role: 'developer',
+        content: getLangSpecificSystemPrompts(locale).SYSTEM_STORY_REFINMENT_PROMPT,
+      },
     ],
   });
 
@@ -295,18 +198,16 @@ async function generateStoryText(
     locale,
   }: {
     randomEndingEnabled: boolean;
-    locale: RequestPayload['locale'];
+    locale: Locale;
   }
 ): Promise<{ storyText: string; storySystemPrompt: string }> {
-  const endingPrompt = randomEndingEnabled
-    ? getRandomArrayElement(SYSTEM_ENDING_PROMPTS)
-    : 'Stwórz historię z tonem i zakończeniem adekwatnym dla wejścia użytkownika. Koci motyw jest mniej istotny, chyba że użytkwnik sobie tego zarzyczył.';
+  const prompts = getLangSpecificSystemPrompts(locale);
 
-  const storySystemPrompt = [
-    SYSTEM_PROMPT_BASE,
-    SYSTEM_PROMPT_LANG_SPECIFIC[locale],
-    endingPrompt,
-  ].join('\n');
+  const endingPrompt = randomEndingEnabled
+    ? getRandomArrayElement(prompts.SYSTEM_ENDING_PROMPTS)
+    : prompts.DEFAULT_ENDING_PROMPT;
+
+  const storySystemPrompt = [prompts.SYSTEM_PROMPT_BASE, endingPrompt].join('\n');
 
   console.log('generating story text...', { endingPrompt });
   const storyCompletion = await openAi.chat.completions.create({
@@ -338,7 +239,10 @@ async function generateImagePrompt(storyText: string): Promise<string> {
     stream: false,
     temperature: 0.6,
     messages: [
-      { role: 'system', content: IMAGE_PROMPT_GEN_PROMPT },
+      {
+        role: 'system',
+        content: getImagePrompts().IMAGE_PROMPT_GEN_PROMPT,
+      },
       { role: 'user', content: storyText },
     ],
   });
@@ -362,7 +266,10 @@ async function generateImage(imagePrompt: string): Promise<string> {
       stream: false,
       temperature: 0.4,
       messages: [
-        { role: 'system', content: IMAGE_GEN_MODEL_DECISION_PROMPT },
+        {
+          role: 'system',
+          content: getImagePrompts().IMAGE_GEN_MODEL_DECISION_PROMPT,
+        },
         { role: 'user', content: imagePrompt },
       ],
     });
@@ -384,7 +291,7 @@ async function generateImage(imagePrompt: string): Promise<string> {
     console.log('generating image using Juggernaut XL from RunDiffusion...');
     const result = await runware.requestImages({
       positivePrompt: imagePrompt,
-      negativePrompt: 'multiple characters',
+      negativePrompt: getImagePrompts().NEGATIVE_PROMPTS.JUGG,
       model: 'civitai:133005@357609',
       width: 1024,
       height: 1024,
@@ -410,7 +317,7 @@ async function generateImage(imagePrompt: string): Promise<string> {
     console.log('generating image using FLUX.1 (Dev)...');
     const result = await runware.requestImages({
       positivePrompt: imagePrompt,
-      negativePrompt: 'text',
+      negativePrompt: getImagePrompts().NEGATIVE_PROMPTS.FLUX,
       model: 'runware:101@1',
       width: 1024,
       height: 1024,
@@ -475,12 +382,8 @@ async function generateImage(imagePrompt: string): Promise<string> {
   }
 }
 
-async function generateTitle(storyText: string, locale: RequestPayload['locale']): Promise<string> {
+async function generateTitle(storyText: string, locale: Locale): Promise<string> {
   console.log('generating title...');
-
-  const titleSystemPrompt = [TITLE_GEN_PROMPT_BASE, TITLE_GEN_PROMPT_LANG_SPECIFIC[locale]].join(
-    '\n'
-  );
 
   const titleCompletion = await openAi.chat.completions.create({
     model: 'gpt-4o',
@@ -488,7 +391,7 @@ async function generateTitle(storyText: string, locale: RequestPayload['locale']
     stream: false,
     temperature: 0.8,
     messages: [
-      { role: 'system', content: titleSystemPrompt },
+      { role: 'system', content: getLangSpecificSystemPrompts(locale).TITLE_GEN_PROMPT },
       { role: 'user', content: storyText },
     ],
   });
@@ -503,11 +406,7 @@ async function generateTitle(storyText: string, locale: RequestPayload['locale']
   return title;
 }
 
-const generateNarration = async (
-  storyTitle: string,
-  storyText: string,
-  locale: RequestPayload['locale']
-): Promise<Blob> => {
+const generateNarration = async (storyTitle: string, storyText: string): Promise<Blob> => {
   console.log('generating narration...');
 
   const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
@@ -522,12 +421,7 @@ const generateNarration = async (
 
   const url = `https://api.elevenlabs.io/v1/text-to-speech/${elevenLabsVoiceId}`;
 
-  const narrationScript = [
-    NARRATION_INTRO[locale],
-    storyTitle,
-    '<break time="0.5s" />',
-    storyText,
-  ].join(' ');
+  const narrationScript = [storyTitle, NARRATION_CONFIG.SHORT_BREAK_TOKEN, storyText].join(' ');
 
   const response = await fetch(url, {
     method: 'POST',
