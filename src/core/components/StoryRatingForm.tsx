@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import ConfettiExplosion from 'react-confetti-explosion';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useStoryRatingMutation } from '../hooks/useStoryRatingMutation.ts';
 import { StoryObject } from '../utils/stories.ts';
@@ -9,7 +10,9 @@ interface StoryRatingProps {
 
 export const StoryRatingForm = ({ story }: StoryRatingProps) => {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const [isExploding, setIsExploding] = useState(false);
   const { mutate: rateStory } = useStoryRatingMutation();
+
   const intl = useIntl();
 
   const storyRating = story.rating ?? 0;
@@ -25,6 +28,10 @@ export const StoryRatingForm = ({ story }: StoryRatingProps) => {
     starAudio.currentTime = 0;
     void starAudio.play();
 
+    if (rating === 5) {
+      setIsExploding(true);
+    }
+
     rateStory({ storyId: story.id, rating });
   };
 
@@ -38,7 +45,15 @@ export const StoryRatingForm = ({ story }: StoryRatingProps) => {
       <span className="text-sm">
         <FormattedMessage id="storyRating.question" />
       </span>
-      <div className="flex gap-2">
+      <div className="flex gap-2 relative">
+        {isExploding && (
+          <ConfettiExplosion
+            particleCount={200}
+            duration={3000}
+            width={1600}
+            onComplete={() => setIsExploding(false)}
+          />
+        )}
         {[1, 2, 3, 4, 5].map((position) => {
           return (
             <span
