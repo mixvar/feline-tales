@@ -24,6 +24,7 @@ type RequestPayload = {
   userInput: string;
   narrationEnabled?: boolean;
   randomEndingEnabled?: boolean;
+  rngSeed?: number;
 };
 
 type ResponsePayload = {
@@ -79,6 +80,7 @@ Deno.serve(async (req) => {
       userInput,
       narrationEnabled = true,
       randomEndingEnabled = true,
+      rngSeed = Math.floor(Math.random() * 1000),
     } = (await req.json()) as RequestPayload;
 
     console.log('creating a story...', { userInput });
@@ -86,6 +88,7 @@ Deno.serve(async (req) => {
     const { storyText, storySystemPrompt } = await generateStoryText(userInput, {
       randomEndingEnabled,
       locale,
+      rngSeed,
     });
 
     const createImage = (text: string) =>
@@ -196,15 +199,17 @@ async function generateStoryText(
   {
     randomEndingEnabled,
     locale,
+    rngSeed,
   }: {
     randomEndingEnabled: boolean;
     locale: Locale;
+    rngSeed: number;
   }
 ): Promise<{ storyText: string; storySystemPrompt: string }> {
   const prompts = getLangSpecificSystemPrompts(locale);
 
   const endingPrompt = randomEndingEnabled
-    ? getRandomArrayElement(prompts.SYSTEM_ENDING_PROMPTS)
+    ? getRandomArrayElement(prompts.SYSTEM_ENDING_PROMPTS, rngSeed)
     : prompts.DEFAULT_ENDING_PROMPT;
 
   const storySystemPrompt = [prompts.SYSTEM_PROMPT_BASE, endingPrompt].join('\n');
@@ -545,6 +550,6 @@ const insertStoryIntoDb = async (supabase: SupabaseClient, story: CreateStoryPay
   }
 };
 
-const getRandomArrayElement = <T>(array: T[]): T => {
-  return array[Math.floor(Math.random() * array.length)];
+const getRandomArrayElement = <T>(array: T[], rngSeed: number): T => {
+  return array[rngSeed % array.length];
 };
