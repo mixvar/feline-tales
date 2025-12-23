@@ -4,7 +4,7 @@
 // see: https://vite.dev/guide/env-and-mode#env-variables-and-modes
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
-  readonly VITE_SUPABASE_ANON_KEY: string;
+  readonly VITE_SUPABASE_PUBLIC_KEY: string;
 }
 
 interface ImportMeta {
